@@ -1,0 +1,8 @@
+<?php /** @var $options array */ ?>
+<?php if (!empty($options['resultMsg'])) : ?>
+    <?php foreach ($options['resultMsg'] as $msg) :?>
+        <p>
+        <?= $msg ?>
+        </p>
+    <?php endforeach; ?>
+<?php endif; ?>

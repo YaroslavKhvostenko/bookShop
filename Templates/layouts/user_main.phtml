@@ -1,0 +1,18 @@
+<?php /** @var $options array */ ?>
+
+<?php if(isset($options['user']['image'])): ?>
+<img src="/Media/images/users/<?= $options['user']['image'] ?>" alt="avatar" width="150px" height="150px">
+<?php endif; ?>
+<h3>Добро пожаловать <?= $options['user']['name'] ?>!</h3>
+
+<?php //if ($options['user']['type'] == 'family'): ?>
+<!--    --><?php //include_once 'family_menu.phtml'; ?>
+<?php //else: ?>
+<!--    --><?php //include_once 'student_menu.phtml'; ?>
+<?php //endif; ?>
+<?php //echo $options['data']['errMsg'] ?? '' ?>
+<?php //if (isset($options['data']['tasks'])): ?>
+<!--    --><?php //if ($options['user']['type'] == 'family'): ?>
+<!--        --><?php //include_once 'user_tasks.phtml'; ?>
+<!--    --><?php //endif; ?>
+<?php //endif; ?>
