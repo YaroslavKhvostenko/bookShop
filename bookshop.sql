@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: localhost:3306
--- Время создания: Авг 19 2023 г., 07:30
+-- Время создания: Авг 20 2023 г., 22:52
 -- Версия сервера: 8.0.34-0ubuntu0.20.04.1
 -- Версия PHP: 7.4.33
 
@@ -38,7 +38,7 @@ CREATE TABLE `admins` (
   `phone` varchar(13) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
   `address` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
   `image` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
-  `is_active` smallint NOT NULL DEFAULT '0',
+  `is_active` smallint NOT NULL DEFAULT '1',
   `is_admin` smallint NOT NULL DEFAULT '1',
   `is_approved` smallint NOT NULL DEFAULT '0',
   `is_head` smallint NOT NULL DEFAULT '0'

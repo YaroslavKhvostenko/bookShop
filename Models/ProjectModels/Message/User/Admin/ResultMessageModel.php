@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Models\ProjectModels\Message\User;
+namespace Models\ProjectModels\Message\User\Admin;
 
 use Interfaces\IDataManagement;
 use Models\ProjectModels\DataRegistry;
@@ -36,7 +36,13 @@ class ResultMessageModel
                 return 'Вы забыли указать вашу дату рождения!';
             case 'email' :
                 return 'Вы забыли указать вашу почту!';
-            default: return 'Иди выровняй руки говнокодер!';
+            case 'admin_pass' :
+                return 'Вы забыли указать админовский пароль!';
+            case 'phone' :
+                return 'Вы забыли указать телефон!';
+            case 'address' :
+                return 'Вы забыли указать аддресс!';
+            default : return 'Иди выровняй руки говнокодер!';
         }
     }
 
@@ -63,6 +69,8 @@ class ResultMessageModel
                 return 'Неправильный формат телефона!';
             case 'address' :
                 return 'Неправильный формат адресса!';
+            case 'admin_pass' :
+                return 'Вы ввели неправильный пароль админа!';
             case 'image_size' :
                 return 'Слишком большая картинка! Не более 500 килобайт!';
             case 'image_type' :
@@ -72,13 +80,9 @@ class ResultMessageModel
     }
 
     /**
-     * @param string $msg
+     * @param string $typeMsg
+     * @return string
      */
-    public function setMsg(string $msg): void
-    {
-        $this->sessionInfo->setSessionMsg($msg);
-    }
-
     public function resultRegMsg(string $typeMsg): string
     {
         switch ($typeMsg) {
@@ -91,6 +95,10 @@ class ResultMessageModel
         }
     }
 
+    /**
+     * @param $typeMsg
+     * @return string
+     */
     public function resultLogMsg($typeMsg): string
     {
         switch ($typeMsg) {
@@ -98,8 +106,18 @@ class ResultMessageModel
                 return 'Такого пользователя не существует!';
             case 'failed_pass' :
                 return 'Неправильный пароль!';
+            case 'failed_admin_pass' :
+                return 'Неправильный пароль админа!';
             case 'not_active' :
                 return 'Страница была удалена! Не желаете ли восстановить!?';
         }
+    }
+
+    /**
+     * @param string $msg
+     */
+    public function setMsg(string $msg): void
+    {
+        $this->sessionInfo->setSessionMsg($msg);
     }
 }

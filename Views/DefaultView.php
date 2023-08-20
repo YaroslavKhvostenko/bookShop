@@ -73,7 +73,7 @@ class DefaultView
     {
         $requestUri = explode('/', trim($this->serverInfo->getRequestUri(), '/'));
         if (ucfirst($requestUri[0]) === 'Admin') {
-            if (isset($this->sessionInfo->getUser()['admin'])) {
+            if (isset($this->sessionInfo->getUser()['is_admin'])) {
                 include_once self::LAYOUTS_PATH . self::ADMIN_LAYOUTS . 'admin_logged_header.phtml';
             } else {
                 include_once self::LAYOUTS_PATH . self::ADMIN_LAYOUTS . 'admin_header.phtml';

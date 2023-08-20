@@ -18,14 +18,11 @@ training.phtml
 /Models/ProjectModels/UserModelYarik.php
 /Models/ProjectModels/ValidationModel.php
 /Models/ProjectModels/ValidationModelVlad.php
-/Models/ProjectModels/Admin/UserModel.php
 /Models/ProjectModels/Admin/UserModelYarik.php
 /Models/ProjectModels/Message/User/ResultMessageModelYarik.php
-/Models/ProjectModels/Message/User/Admin/ResultMessageModel.php
 /Models/ProjectModels/Message/User/Admin/ResultMessageModelYarik.php
 /Models/ProjectModels/Validation/Condition/
 /Models/ProjectModels/Validation/Data/Order/Validator.php
 /Models/ProjectModels/Validation/Data/User/ValidatorYarik.php
 /Models/ProjectModels/Validation/Data/User/ValidatorVlad2.php
-/Models/ProjectModels/Validation/Data/User/Admin/Validator.php
 /Models/ProjectModels/Validation/Data/User/Admin/ValidatorYarik.php

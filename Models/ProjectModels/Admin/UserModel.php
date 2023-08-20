@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Models\ProjectModels;
+namespace Models\ProjectModels\Admin;
 
-use Interfaces\IDataManagement;
-use Models\ProjectModels\Message\User\ResultMessageModel;
+use Models\ProjectModels\Message\User\Admin\ResultMessageModel;
+use Models\ProjectModels\DefaultModel;
+use Models\ProjectModels\DataRegistry;
 
 /**
  * @package Models\ProjectModels
@@ -13,12 +14,15 @@ class UserModel extends DefaultModel
 {
     private ResultMessageModel $msgModel;
 
+    private string $adminPass;
+
     private array $user = [];
 
     public function __construct()
     {
         parent::__construct();
         $this->msgModel = new ResultMessageModel();
+        $this->adminPass = DataRegistry::getInstance()->get('config')->getAdminPass();
     }
 
     /**
@@ -39,6 +43,9 @@ class UserModel extends DefaultModel
                 return false;
             } else {
                 $data['is_active'] = 1;
+                $data['is_admin'] = 1;
+                $data['is_approved'] = 0;
+                $data['is_head'] = 0;
                 $this->setSessionData($data);
                 $this->msgModel->setMsg($this->msgModel->resultRegMsg('user_reg_success'));
                 return true;
@@ -62,7 +69,7 @@ class UserModel extends DefaultModel
             $condition .= ' OR `email` = ' . $this->db->getConnection()->quote($userEmail);
         }
         $field = ['id', 'login', 'pass', 'name',
-            'birthdate', 'email', 'phone', 'address', 'image', 'is_active'];
+            'birthdate', 'email', 'phone', 'address', 'image', 'is_active', 'is_admin', 'is_approved', 'is_head'];
         $result = $this->db->selectData($tableName, $field, $condition);
         if ($result && $userEmail !== null) { // for registration no needed exist_user_data
             return true;
@@ -72,6 +79,39 @@ class UserModel extends DefaultModel
         }
 
         return false;
+    }
+
+    /**
+     * Check type of user and login on site
+     * @param string $tableName
+     * @param string $login
+     * @param string $password
+     * @return bool
+     */
+    public function login(string $tableName, $data): bool
+    {
+        if ($this->userExist($tableName, $data['login'])) {
+            if (password_verify($data['pass'], $this->getUser()['pass'])) {
+                if (password_verify($data['admin_pass'], $this->adminPass)) {
+                    if ((int)$this->getUser()['is_active'] === 1) {
+                        $this->setSessionData($this->getUser());
+                        return true;
+                    } else {
+                        $this->msgModel->setMsg($this->msgModel->resultLogMsg('not_active'));
+                        return false;
+                    }
+                } else {
+                    $this->msgModel->setMsg($this->msgModel->resultLogMsg('failed_admin_pass'));
+                    return false;
+                }
+            } else {
+                $this->msgModel->setMsg($this->msgModel->resultLogMsg('failed_pass'));
+                return false;
+            }
+        } else {
+            $this->msgModel->setMsg($this->msgModel->resultLogMsg('user_not_exist'));
+            return false;
+        }
     }
 
     /**
@@ -93,34 +133,6 @@ class UserModel extends DefaultModel
     public function logout(): void
     {
         $this->sessionInfo->destroy();
-    }
-
-    /**
-     * Check type of user and login on site
-     * @param string $tableName
-     * @param array $data
-     * @return bool
-     */
-    public function login(string $tableName, array $data): bool
-    {
-        if ($this->userExist($tableName, $data['login'])) {
-            if (password_verify($data['pass'], $this->getUser()['pass'])) {
-                $isActive = $this->getUser()['is_active'];
-                if ((int)$this->getUser()['is_active'] === 1) {
-                    $this->setSessionData($this->getUser());
-                    return true;
-                } else {
-                    $this->msgModel->setMsg($this->msgModel->resultLogMsg('not_active'));
-                    return false;
-                }
-            } else {
-                $this->msgModel->setMsg($this->msgModel->resultLogMsg('failed_pass'));
-                return false;
-            }
-        } else {
-            $this->msgModel->setMsg($this->msgModel->resultLogMsg('user_not_exist'));
-            return false;
-        }
     }
 
     /**
