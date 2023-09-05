@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Views;
+namespace Views\AbstractViews;
 
 use Models\ProjectModels\DataRegistry;
 use Interfaces\IDataManagement;
@@ -11,16 +11,13 @@ use Interfaces\IDataManagement;
  *
  * @package View
  */
-class DefaultView
+abstract class AbstractDefaultView
 {
     protected const LAYOUTS_PATH = 'layouts/';
-
-    protected const ADMIN_LAYOUTS = 'admin/';
     /**
      * Object for access to session data
      */
     protected IDataManagement $sessionInfo;
-
     /**
      * Object for access to server data
      */
@@ -53,37 +50,30 @@ class DefaultView
      */
     public function getOptions(string $title, string $content, array $data = null): array
     {
-        $options['content'] = self::LAYOUTS_PATH . $content;
+        $options['content'] = $this->getContentPath() . $content;
         $options['title'] = $title;
-        $options['header'] = self::LAYOUTS_PATH . 'header.phtml';
-        $options['messages'] = self::LAYOUTS_PATH . 'messages.phtml';
-        $options['footer'] = self::LAYOUTS_PATH . 'footer.phtml';
+        $options['header'] = $this->getPath() . 'header.phtml';
+        $options['messages'] = $this->getPath() . 'messages.phtml';
+        $options['footer'] = $this->getPath() . 'footer.phtml';
         $options['user'] = $this->sessionInfo->getUser();
         $options['data'] = $data;
         $options['resultMsg'] = $this->sessionInfo->getAllMessages();
         return $options;
     }
 
-    public function getRefererUri(): string
-    {
-        return $this->serverInfo->getReferer();
-    }
-
     public function getHeaderContent(): void
     {
-        $requestUri = explode('/', trim($this->serverInfo->getRequestUri(), '/'));
-        if (ucfirst($requestUri[0]) === 'Admin') {
-            if (isset($this->sessionInfo->getUser()['is_admin'])) {
-                include_once self::LAYOUTS_PATH . self::ADMIN_LAYOUTS . 'admin_logged_header.phtml';
-            } else {
-                include_once self::LAYOUTS_PATH . self::ADMIN_LAYOUTS . 'admin_header.phtml';
-            }
+        if ($this->sessionInfo->getUser()) {
+            include_once $this->getContentPath() . 'user_logged_header.phtml';
         } else {
-            if ($this->sessionInfo->getUser()) {
-                include_once self::LAYOUTS_PATH . 'user_logged_header.phtml';
-            } else {
-                include_once self::LAYOUTS_PATH . 'user_header.phtml';
-            }
+            include_once $this->getContentPath() . 'user_header.phtml';
         }
     }
+
+    protected function getPath(): string
+    {
+        return self::LAYOUTS_PATH;
+    }
+
+    abstract protected function getContentPath(): string;
 }

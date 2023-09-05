@@ -3,62 +3,58 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Validation\Data\User\Admin;
 
+use \Models\AbstractProjectModels\Validation\Data\User\Validator as BaseValidator;
 use Models\ProjectModels\DataRegistry;
 
-class Validator
+class Validator extends BaseValidator
 {
     private string $adminPass;
-
-    private const REG_FIELDS = [
-        'login',
-        'pass',
-        'pass_confirm',
-        'name',
-        'birthdate',
-        'email',
+    private const REGISTRATION_FIELDS = [
         'phone',
         'address',
         'admin_pass'
     ];
-
-    private const LOG_FIELDS = [
-        'login',
-        'pass',
+    private const LOGIN_FIELDS = [
         'admin_pass'
-    ];
-
-    private array $requiredFields = [
-        'registration' => self::REG_FIELDS,
-        'login' => self::LOG_FIELDS
     ];
 
     public function __construct()
     {
+        parent::__construct();
+        $this->requiredFields['registration'] = array_merge(
+            $this->requiredFields['registration'],
+            self::REGISTRATION_FIELDS
+        );
+        $this->requiredFields['login'] = array_merge($this->requiredFields['login'], self::LOGIN_FIELDS);
         $this->adminPass = DataRegistry::getInstance()->get('config')->getAdminPass();
     }
 
-    /**
-     * @param array $data
-     * @return array
-     */
-    public function emptyCheck(array $data, string $type): array
+    protected function emptyCheckCondition(string $data): bool
     {
-        $resultData = [];
-        foreach ($this->requiredFields[$type] as $field) {
-            if (empty($data[$field]) || ($data[$field] === $data['phone'] && $data['phone'] === '+380')) {
-                $resultData[$field] = false;
-            } else {
-                $resultData[$field] = $data[$field];
-            }
+        return (parent::emptyCheckCondition($data) || $data === '+380');
+    }
+
+    protected function lastFieldsCheck(string $field, string $value)
+    {
+        switch ($field) {
+            case 'phone' :
+                return $this->pregMatchStrLen('/^\+380\d{3}\d{2}\d{2}\d{2}$/', $value);
+            case 'address' :
+                return $this->pregMatchStrLen('/.{10,100}/u', $value);
+            case 'admin_pass' :
+                if (!password_verify($value, $this->adminPass)) {
+                    return '';
+                }
+                break;
+            default : return '';
         }
-        return $resultData;
     }
 
     /**
      * @param array $data
      * @return array
      */
-    public function correctCheck(array $data): array // yarik
+    public function correctCheck(array $data): array
     {
         $resultData = [];
         foreach ($data as $key => $value) {
@@ -96,60 +92,5 @@ class Validator
             }
         }
         return $resultData;
-    }
-
-    /**
-     * @param string $pattern
-     * @param string $dataString
-     * @return string
-     */
-    protected function pregMatchStrLen(string $pattern, string $dataString): string
-    {
-        preg_match($pattern, $dataString, $result);
-        if (isset($result[0])) {
-            return strlen($dataString) === strlen($result[0]) ? $result[0] : '';
-        } else {
-            return '';
-        }
-    }
-
-    /**
-     * @param string $dataString
-     * @return string
-     */
-    protected function severalLanguagesCheck(string $dataString): string
-    {
-        if ($this->pregMatchStrLen('/[А-Яа-я]{2,30}/u', $dataString) === '') {
-            return $this->pregMatchStrLen('/[A-Za-z]{2,30}/u', $dataString);
-        } else {
-            return $this->pregMatchStrLen('/[А-Яа-я]{2,30}/u', $dataString);
-        }
-    }
-
-    /**
-     * @param string $dateString
-     * @return string
-     */
-    protected function checkDate(string $dateString): string
-    {
-        $arr = explode(".", $dateString);
-        if (count($arr) !== 3) {
-            return '';
-        } else {
-            return checkdate((int) $arr[1], (int) $arr[0], (int) $arr[2]) ? $dateString : '';
-        }
-    }
-
-    /**
-     * @param string $emailString
-     * @return string
-     */
-    protected function checkEmail(string $emailString): string
-    {
-        if ($emailString !== '') {
-            return filter_var($emailString, FILTER_VALIDATE_EMAIL) ? $emailString : '';
-        } else {
-            return '';
-        }
     }
 }

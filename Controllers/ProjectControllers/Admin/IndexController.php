@@ -3,45 +3,27 @@ declare(strict_types=1);
 
 namespace Controllers\ProjectControllers\Admin;
 
-use Models\ProjectModels\DefaultModel;
-use Views\DefaultView;
-use Controllers\ProjectControllers\BaseController;
+use Controllers\AbstractControllers\AbstractIndexController;
+use Models\ProjectModels\Admin\DefaultModel;
+use Views\ProjectViews\Admin\DefaultView;
 
 /**
  * @package Controllers\ProjectControllers\Admin
  */
-class IndexController extends BaseController
+class IndexController extends AbstractIndexController
 {
-    private DefaultView $defaultView;
-
-    private DefaultModel $defaultModel;
-
     public function __construct()
     {
-        $this->defaultView = new DefaultView();
-        $this->defaultModel = new DefaultModel();
+        parent::__construct(new DefaultModel(), new DefaultView());
     }
 
-    /**
-     * Render default page
-     *
-     * @return void
-     */
-    public function indexAction(): void
+    protected function adminStatus(): bool
     {
-        if ($this->defaultModel->isSigned() && !$this->defaultModel->isAdmin()) {
-            $this->homeLocation();
-        } else {
-            if ($this->defaultModel->isSigned()) {
-                $content = 'admin/admin_main.phtml';
-            } else {
-                $content = 'admin/main.phtml';
-            }
-            $options = $this->defaultView->getOptions('Главная', $content);
-            $this->defaultView->render($options);
-        }
-//        $content = $this->sessionInfo->getUser() !== null ? 'admin/admin_main.phtml' : 'admin/main.phtml';
-//        $options = $this->defaultView->getOptions('Главная', $content);
-//        $this->defaultView->render($options);
+        return !$this->defaultModel->isAdmin();
+    }
+
+    protected function redirectLocation(string $url = null): void
+    {
+        $this->location();
     }
 }

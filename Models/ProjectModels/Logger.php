@@ -8,13 +8,9 @@ namespace Models\ProjectModels;
 class Logger
 {
     private const FILE_PATH = 'logs/';
-
     private const TYPE_PDO = 'pdo';
-
     private const TYPE_REFLECTION = 'reflection';
-
     private const TYPE_DEFAULT = 'default';
-
     private const TYPE_FILES = [
         self::TYPE_PDO => 'pdo_error.log',
         self::TYPE_REFLECTION => 'reflection_error.log',

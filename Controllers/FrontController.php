@@ -23,22 +23,18 @@ class FrontController
      * Given controller
      */
     protected string $controller;
-
     /**
      * Given action
      */
     protected string $action;
-
     /**
      * Given params values
      */
     protected ?array $params = null;
-
     /**
      * Object for access to server data
      */
     private IDataManagement $serverInfo;
-
     public Logger $logger;
 
     public function __construct()

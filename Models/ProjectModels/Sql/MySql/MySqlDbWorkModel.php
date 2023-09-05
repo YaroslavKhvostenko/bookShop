@@ -16,9 +16,7 @@ use Models\ProjectModels\DataRegistry;
 class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 {
     protected IDataManagement $config;
-
     public Logger $logger;
-
     private \PDO $pdo;
 
     /**
@@ -119,56 +117,6 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 
         } catch (\PDOException $exception) {
             $this->logger->log('pdo', $exception->getMessage() . $exception->getTraceAsString());
-        }
-
-        return false;
-    }
-
-    /**
-     * Update data in database
-     *
-     * @param string $tableName
-     * @param array $field
-     * @param string $condition
-     * @return false|int
-     */
-    public function updateData(string $tableName, array $field, string $condition)
-    {
-        $sql = "UPDATE `{$tableName}` SET ";
-        $i = 1;
-        $count = count($field);
-        foreach ($field as $key => $value) {
-            if ($i == $count) {
-                $sql .= "`{$key}`={$this->pdo->quote("$value")} ";
-            } else {
-                $sql .= "`{$key}`={$this->pdo->quote("$value")}, ";
-            }
-            $i++;
-        }
-        $sql .= "WHERE {$condition}";
-        try {
-            return $this->pdo->exec($sql);
-        } catch (\PDOException $PDOException) {
-            $this->logger->log('pdo', $PDOException->getMessage() . $PDOException->getTraceAsString());
-        }
-
-        return false;
-    }
-
-    /**
-     * Method for delete data from database without given condition
-     *
-     * @param string $tableName
-     * @param string $id
-     * @return false|int
-     */
-    public function deleteData(string $tableName, string $id)
-    {
-        $sql = "DELETE FROM `{$tableName}` WHERE `id` IN ($id)";
-        try {
-            return $this->pdo->exec($sql);
-        } catch (\PDOException $PDOException) {
-            $this->logger->log('pdo', $PDOException->getMessage() . $PDOException->getTraceAsString());
         }
 
         return false;

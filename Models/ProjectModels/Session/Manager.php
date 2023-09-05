@@ -63,11 +63,6 @@ class Manager implements IDataManagement
      */
     public function setUserData(string $key, $data): void
     {
-//        if (isset($this->data['user'][$key]) && is_array($this->data['user'][$key])) {
-//            $this->data['user'][$key][] = $data;
-//        } else {
-//            $this->data['user'][$key] = $data;
-//        }
         $this->data[self::USER_KEY][$key] = $data;
         $_SESSION[self::USER_KEY] = $this->data[self::USER_KEY];
     }
@@ -80,7 +75,6 @@ class Manager implements IDataManagement
 
     public function setSessionMsg(string $msg): void
     {
-//        $this->messages[] = $msg;
         $_SESSION[self::MESSAGE_KEY][] = $msg;
     }
 
@@ -88,4 +82,5 @@ class Manager implements IDataManagement
     {
         return isset($this->data[self::USER_KEY]);
     }
+
 }

@@ -3,41 +3,27 @@ declare(strict_types=1);
 
 namespace Controllers\ProjectControllers;
 
+use Controllers\AbstractControllers\AbstractIndexController;
 use Models\ProjectModels\DefaultModel;
-use Views\DefaultView;
+use Views\ProjectViews\DefaultView;
 
 /**
  * @package Controllers\ProjectControllers
  */
-class IndexController extends BaseController
+class IndexController extends AbstractIndexController
 {
-    private DefaultView $defaultView;
-
-    private DefaultModel $defaultModel;
-
     public function __construct()
     {
-        $this->defaultView = new DefaultView();
-        $this->defaultModel = new DefaultModel();
+        parent::__construct(new DefaultModel(), new DefaultView());
     }
 
-    /**
-     * Render default page
-     *
-     * @return void
-     */
-    public function indexAction(): void
+    protected function adminStatus(): bool
     {
-        if ($this->defaultModel->isSigned() && $this->defaultModel->isAdmin()) {
-            $this->adminHomeLocation();
-        } else {
-            if ($this->defaultModel->isSigned()) {
-                $content = 'user_main.phtml';
-            } else {
-                $content = 'main.phtml';
-            }
-            $options = $this->defaultView->getOptions('Главная', $content);
-            $this->defaultView->render($options);
-        }
+        return $this->defaultModel->isAdmin();
+    }
+
+    protected function redirectLocation(string $url = null): void
+    {
+        $this->location('admin/');
     }
 }

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Models\ProjectModels;
+namespace Models\ProjectModels\Admin;
 
 use Models\AbstractProjectModels\AbstractDefaultModel;
 
