@@ -9,23 +9,18 @@ use Models\ProjectModels\DataRegistry;
 
 abstract class AbstractDefaultModel
 {
-    /**
-     * Object for access to session data
-     *
-     */
     protected IDataManagement $sessionInfo;
-    /**
-     * Object for access to file data
-     *
-     */
-    protected IDataManagement $fileInfo;
+    protected ?IDataManagement $fileInfo = null;
     public Logger $logger;
 
+    /**
+     * AbstractDefaultModel constructor.
+     * @throws \Exception
+     */
     public function __construct()
     {
         $this->logger = new Logger();
         $this->sessionInfo = DataRegistry::getInstance()->get('session');
-        $this->fileInfo = DataRegistry::getInstance()->get('file');
     }
 
     public function isSigned(): bool
@@ -38,18 +33,27 @@ abstract class AbstractDefaultModel
         return isset($this->sessionInfo->getUser()['is_admin']);
     }
 
-    /**
-     * Move uploaded file from temporary folder to right folder in project
-     *
-     * @param string $folder
-     * @param null|string $fileName
-     * @return string
-     */
     public function moveUploadFile(string $folder, string $fileName = null): string
     {
         $fileName = $fileName ?? rand() . $this->fileInfo->getFileName();
-        move_uploaded_file($this->fileInfo->getFileTmpName(),
-            $this->fileInfo->getFullImagePath($folder) . $fileName);
+        move_uploaded_file(
+            $this->fileInfo->getFileTmpName(),
+            $this->fileInfo->getFullImagePath($folder) . $fileName
+        );
+
         return $fileName;
+    }
+
+    /**
+     * @return IDataManagement
+     * @throws \Exception
+     */
+    protected function getFileInfo(): IDataManagement
+    {
+        if (!$this->fileInfo) {
+            $this->fileInfo = DataRegistry::getInstance()->get('file');
+        }
+
+        return $this->fileInfo;
     }
 }

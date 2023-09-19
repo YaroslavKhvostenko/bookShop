@@ -5,38 +5,23 @@ namespace Models\ProjectModels;
 
 use Interfaces\IDataManagement;
 
-/**
- * @package Models\ProjectModels
- */
 class DataRegistry
 {
     private static DataRegistry $instance;
     private array $registry;
 
-    /**
-     * Prevent from creating multiple instances
-     */
     private function __construct()
     {
     }
 
-    /**
-     * Prevent the instance from being cloned
-     */
     private function __clone()
     {
     }
 
-    /**
-     * Prevent from being unserialized
-     */
     private function __wakeup()
     {
     }
 
-    /**
-     * @return DataRegistry
-     */
     public static function getInstance(): DataRegistry
     {
         if (!isset(self::$instance)) {
@@ -58,6 +43,7 @@ class DataRegistry
         } else {
             throw new \Exception('Item with the same key already exists.');
         }
+
         return $this;
     }
 
@@ -69,7 +55,7 @@ class DataRegistry
     public function get(string $key): IDataManagement
     {
         if (!isset($this->registry[$key])) {
-            throw new \Exception('Item with key: ' . $key . ' not found');
+            throw new \Exception('Item with key: ' . $key . ' not found ');
         } else {
             return $this->registry[$key];
         }

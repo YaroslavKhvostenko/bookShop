@@ -6,9 +6,6 @@ namespace Models\ProjectModels;
 use Models\AbstractProjectModels\AbstractUserModel;
 use Models\ProjectModels\Message\User\ResultMessageModel;
 
-/**
- * @package Models\ProjectModels
- */
 class UserModel extends AbstractUserModel
 {
     public function __construct()

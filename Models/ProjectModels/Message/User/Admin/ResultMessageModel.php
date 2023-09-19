@@ -23,9 +23,9 @@ class ResultMessageModel extends AbstractMsgModel
 
     public function __construct()
     {
-        parent::__construct();
         $this->messages[self::EMPTY] = array_merge($this->messages[self::EMPTY], self::EMPTY_DATA);
         $this->messages[self::WRONG] = array_merge($this->messages[self::WRONG], self::WRONG_DATA);
         $this->messages[self::LOGIN] = array_merge($this->messages[self::LOGIN], self::LOGIN_RESULT);
+        parent::__construct();
     }
 }

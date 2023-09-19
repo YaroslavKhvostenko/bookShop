@@ -5,9 +5,6 @@ namespace Models\ProjectModels\Config;
 
 use Interfaces\IDataManagement;
 
-/**
- * @package Models\ProjectModels\Config
- */
 class Manager implements IDataManagement
 {
     private ?array $data = null;
@@ -30,6 +27,7 @@ class Manager implements IDataManagement
         if (!isset($this->data['db_params'])) {
             throw new \PDOException('Params for connecting to database does not exist');
         }
+
         return $this->data['db_params'];
     }
 
@@ -38,6 +36,7 @@ class Manager implements IDataManagement
         if (!isset($this->data['admin_pass'])) {
             throw new \PDOException('Admin password does not exist!');
         }
+
         return $this->data['admin_pass'];
     }
 }

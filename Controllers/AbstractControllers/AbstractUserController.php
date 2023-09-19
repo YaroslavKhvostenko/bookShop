@@ -5,11 +5,14 @@ namespace Controllers\AbstractControllers;
 
 use Interfaces\IDataManagement;
 use Models\ProjectModels\DataRegistry;
+use Models\ProjectModels\File;
+use Models\ProjectModels\Post;
 use Models\ProjectModels\Validation\ImageValidator;
 use Models\AbstractProjectModels\AbstractUserModel;
 use Views\AbstractViews\AbstractDefaultView;
 use Models\AbstractProjectModels\Validation\Data\User\Validator;
 use Models\AbstractProjectModels\Message\User\AbstractMsgModel;
+use Models\ProjectModels\Logger;
 
 abstract class AbstractUserController extends AbstractBaseController
 {
@@ -17,15 +20,10 @@ abstract class AbstractUserController extends AbstractBaseController
     protected AbstractDefaultView $userView;
     protected Validator $dataValidator;
     protected AbstractMsgModel $msgModel;
-    protected ImageValidator $imageValidator;
-    /**
-     * Object for access to $_POST data
-     */
-    protected IDataManagement $postInfo;
-    /**
-     * Object for access to $_FILE data
-     */
-    protected IDataManagement $fileInfo;
+    protected ?ImageValidator $imageValidator = null;
+    protected ?IDataManagement $postInfo = null;
+    protected ?IDataManagement $fileInfo = null;
+    protected Logger $logger;
 
     public function __construct(
         AbstractUserModel $userModel,
@@ -37,110 +35,116 @@ abstract class AbstractUserController extends AbstractBaseController
         $this->userView = $userView;
         $this->dataValidator = $dataValidator;
         $this->msgModel = $msgModel;
-        $this->postInfo = DataRegistry::getInstance()->get('post');
-        $this->fileInfo = DataRegistry::getInstance()->get('file');
-        $this->imageValidator = new ImageValidator($this->fileInfo->getFileData());
+        $this->logger = new Logger();
     }
 
-    /**
-     * Render form for registration
-     *
-     * @param array|null $params
-     * @return void
-     */
     public function registrationAction(array $params = null): void
     {
         if (!$this->userModel->isSigned()) {
             $options = $this->userView->getOptions('Регистрация', 'registration.phtml');
             $this->userView->render($options);
         } else {
-            $this->homeLocationByCustomerType();
+            $this->redirectHomeByCustomerType();
         }
     }
 
-    /**
-     * Render form for authorization
-     *
-     * @return void
-     */
     public function authorizationAction(): void
     {
         if (!$this->userModel->isSigned()) {
             $options = $this->userView->getOptions('Авторизация', 'login.phtml');
             $this->userView->render($options);
         } else {
-            $this->homeLocationByCustomerType();
+            $this->redirectHomeByCustomerType();
         }
     }
 
     /**
-     * Create new user
-     *
      * @param array|null $params
-     * @return void
+     * @throws \Exception
      */
     public function newAction(array $params = null): void
     {
         if ($this->userModel->isSigned()) {
-            $this->homeLocationByCustomerType();
+            $this->redirectHomeByCustomerType();
+
             return;
         }
 
-        if (!$this->postInfo->isPost()) {
-            $this->redirectHomeLocation();
+        if (!$this->getPostInfo()->isPost()) {
+            $this->redirectHome();
+
             return;
         }
 
-        $emptyResult = $this->dataValidator->emptyCheck($this->postInfo->getPostData(), 'registration');
-        if (in_array(false, $emptyResult)) {
-            $this->checkResult($emptyResult, 'empty_data', 'registration');
-        } else {
-            $correctResult = $this->dataValidator->correctCheck($this->postInfo->getPostData());
-            if (in_array('', $correctResult)) {
-                $this->checkResult($correctResult, 'wrong_data', 'registration');
+        try {
+            $emptyResult = $this->dataValidator->emptyCheck($this->postInfo->getPostData());
+            if (in_array(false, $emptyResult)) {
+                $this->checkResult($emptyResult, 'empty_data', 'registration');
             } else {
-                if ($this->fileInfo->isImageSent() && !$this->imageValidator->validate($params[0])) {
-                    $this->checkResult($this->imageValidator->getErrors(), 'wrong_data', 'registration');
+                $correctResult = $this->dataValidator->correctCheck($emptyResult);
+                if (in_array('', $correctResult)) {
+                    $this->checkResult($correctResult, 'wrong_data', 'registration');
                 } else {
-                    if (!$this->userModel->newUser($params[0], $correctResult)) {
-                        $this->redirectLocation('user/registration');
+                    if ($this->getFileInfo()->isImageSent() && !$this->getImageValidator()->validate($params[0])) {
+                        $this->checkResult($this->imageValidator->getErrors(), 'wrong_data', 'registration');
                     } else {
-                        $this->redirectHomeLocation();
+                        if (!$this->userModel->newUser($params[0], $correctResult)) {
+                            $this->prepareRedirect('user/registration');
+                        } else {
+                            $this->redirectHome();
+                        }
                     }
                 }
             }
+        } catch (\Exception $exception) {
+            $this->logger->log('default', $exception->getMessage() . $exception->getTraceAsString());
+            $this->msgModel->setMsg($this->msgModel->getMessage('registration', 'project_mistake'));
+            $this->prepareRedirect('user/registration');
         }
     }
 
     /**
-     * Login action
-     *
-     * @return void
+     * @param array|null $params
+     * @throws \Exception
      */
     public function loginAction(array $params = null): void
     {
         if ($this->userModel->isSigned()) {
-            $this->homeLocationByCustomerType();
+            $this->redirectHomeByCustomerType();
+
             return;
         }
 
-        if (!$this->postInfo->isPost()) {
-            $this->redirectHomeLocation();
+        if (!$this->getPostInfo()->isPost()) {
+            $this->redirectHome();
+
             return;
         }
 
-        $emptyResult = $this->dataValidator->emptyCheck($this->postInfo->getPostData(), 'login');
+        try {
+        $emptyResult = $this->dataValidator->emptyCheck($this->postInfo->getPostData());
         if (in_array(false, $emptyResult)) {
             $this->checkResult($emptyResult, 'empty_data','authorization');
         } else {
             if (!$this->userModel->login($params[0], $emptyResult)) {
-                $this->redirectLocation('user/authorization');
+                $this->prepareRedirect('user/authorization');
             } else {
-                $this->redirectHomeLocation();
+                $this->redirectHome();
             }
+        }
+        } catch (\Exception $exception) {
+            $this->logger->log('default', $exception->getMessage() . $exception->getTraceAsString());
+            $this->msgModel->setMsg($this->msgModel->getMessage('login', 'project_mistake'));
+            $this->prepareRedirect('user/authorization');
         }
     }
 
+    /**
+     * @param array $result
+     * @param string $messagesType
+     * @param $actionType
+     * @throws \Exception
+     */
     protected function checkResult(array $result, string $messagesType, $actionType): void
     {
         foreach ($result as $field => $value) {
@@ -148,26 +152,65 @@ abstract class AbstractUserController extends AbstractBaseController
                 $this->msgModel->setMsg($this->msgModel->getMessage($messagesType, $field));
             }
         }
-        $this->redirectLocation('user/' . $actionType);
+        $this->prepareRedirect('user/' . $actionType);
     }
 
-    /**
-     * Logout action
-     *
-     * @return void
-     */
     public function logoutAction(): void
     {
         if ($this->userModel->isSigned()) {
-            $this->logoutActionType();
+            $this->logoutByCustomerType();
         } else {
-            $this->redirectHomeLocation();
+            $this->redirectHome();
         }
     }
 
-    abstract protected function homeLocationByCustomerType(): void;
+    protected function redirectHomeByCustomerType(): void
+    {
+        if ($this->userModel->isAdmin()) {
+            $this->redirect('admin/');
+        } else {
+            $this->redirect();
+        }
+    }
 
-    abstract protected function redirectHomeLocation(): void;
+    private function getImageValidator(): ImageValidator
+    {
+        if (!$this->imageValidator) {
+            $this->imageValidator = new ImageValidator($this->fileInfo->getFileData());
+        }
 
-    abstract protected function logoutActionType(): void;
+        return $this->imageValidator;
+    }
+
+    /**
+     * @return IDataManagement
+     * @throws \Exception
+     */
+    private function getFileInfo(): IDataManagement
+    {
+        if (!$this->fileInfo) {
+            DataRegistry::getInstance()->register('file', new File\Manager());
+            $this->fileInfo = DataRegistry::getInstance()->get('file');
+        }
+
+        return $this->fileInfo;
+    }
+
+    /**
+     * @return IDataManagement
+     * @throws \Exception
+     */
+    private function getPostInfo(): IDataManagement
+    {
+        if (!$this->postInfo) {
+            DataRegistry::getInstance()->register('post', new Post\Manager());
+            $this->postInfo = DataRegistry::getInstance()->get('post');
+        }
+
+        return $this->postInfo;
+    }
+
+    abstract protected function redirectHome(): void;
+
+    abstract protected function logoutByCustomerType(): void;
 }

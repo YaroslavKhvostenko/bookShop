@@ -6,21 +6,10 @@ namespace Views\AbstractViews;
 use Models\ProjectModels\DataRegistry;
 use Interfaces\IDataManagement;
 
-/**
- * Default class for extends
- *
- * @package View
- */
 abstract class AbstractDefaultView
 {
     protected const LAYOUTS_PATH = 'layouts/';
-    /**
-     * Object for access to session data
-     */
     protected IDataManagement $sessionInfo;
-    /**
-     * Object for access to server data
-     */
     protected IDataManagement $serverInfo;
 
     public function __construct()
@@ -29,25 +18,11 @@ abstract class AbstractDefaultView
         $this->serverInfo = DataRegistry::getInstance()->get('server');
     }
 
-    /**
-     * Maim method for rendering data
-     *
-     * @param array $options
-     * @return void
-     */
     public function render(array $options): void
     {
         include_once 'Templates/index.phtml';
     }
 
-    /**
-     * Set default options for rendering if it's needed
-     *
-     * @param string $title
-     * @param string $content
-     * @param array|null $data
-     * @return array
-     */
     public function getOptions(string $title, string $content, array $data = null): array
     {
         $options['content'] = $this->getContentPath() . $content;

@@ -7,105 +7,132 @@ use Interfaces\User\UserDataValidatorInterface;
 
 abstract class Validator implements UserDataValidatorInterface
 {
-    private const REGISTRATION_FIELDS = [
-        'login',
-        'pass',
-        'pass_confirm',
-        'name',
-        'birthdate',
-        'email'
-    ];
-    private const LOGIN_FIELDS = [
-        'login',
-        'pass'
-    ];
-    protected array $requiredFields = [];
-
-    public function __construct()
+    /**
+     * @param array $data
+     * @return array
+     * @throws \Exception
+     */
+    public function emptyCheck(array $data): array
     {
-        $this->requiredFields = [
-            'registration' => self::REGISTRATION_FIELDS,
-            'login' => self::LOGIN_FIELDS
-        ];
+        $resultData = [];
+        foreach ($data as $field => $value) {
+            switch ($field) {
+                case 'login' :
+                case 'pass' :
+                case 'pass_confirm' :
+                case 'name' :
+                case 'birthdate' :
+                case 'email' :
+                    $resultData[$field] = !$value ? false : $value;
+                    break;
+                default:
+                    $result = $this->specificFieldsEmptyCheck($field, $value);
+                    if ($result === null) {
+                        $resultData[$field] = false;
+                    } elseif ($result !== 'not_necessary') {
+                        $resultData[$field] = $result;
+                    }
+            }
+        }
+
+        return $resultData;
+    }
+
+    /**
+     * @param string $field
+     * @param string $value
+     * @return string|null
+     * @throws \Exception
+     */
+    protected function specificFieldsEmptyCheck(string $field, string $value): ?string
+    {
+        $result = $this->checkResult();
+        switch ($field) {
+            case 'phone' :
+                if ($value && $value !== '+380') {
+                    $result = $value;
+                }
+
+                return $result;
+            case 'address' :
+                if ($value) {
+                    $result = $value;
+                }
+
+                return $result;
+            default:
+                throw new \Exception('Field : \'' . $field . '\' doesn\'t exist!');
+        }
     }
 
     /**
      * @param array $data
-     * @param string $type
      * @return array
+     * @throws \Exception
      */
-    public function emptyCheck(array $data, string $type): array
-    {
-        $resultData = [];
-        foreach ($this->requiredFields[$type] as $field) {
-            if ($this->emptyCheckCondition($data[$field])) {
-                $resultData[$field] = false;
-            } else {
-                $resultData[$field] = $data[$field];
-            }
-        }
-        return $resultData;
-    }
+     public function correctCheck(array $data): array
+     {
+         $resultData = [];
+         foreach ($data as $key => $value) {
+             switch ($key) {
+                 case 'login' :
+                 case 'pass' :
+                     $resultData[$key] = $this->pregMatchStrLen('/[A-Za-z0-9]{4,16}/u', $value);
+                     break;
+                 case 'pass_confirm' :
+                     if ($value !== $data['pass']) {
+                         $resultData[$key] = '';
+                     }
+                     break;
+                 case 'name' :
+                     $resultData[$key] = $this->severalLanguagesCheck($value);
+                     break;
+                 case 'birthdate' :
+                     $resultData[$key] = $this->checkDate($value);
+                     break;
+                 case 'email' :
+                     $resultData[$key] = $this->checkEmail($value);
+                     break;
+                 default :
+                     $result = $this->specificFieldsCorrectCheck($key, $value);
+                     if ($result !== 'not_necessary') {
+                         $resultData[$key] = $result;
+                     }
+             }
+         }
 
-    protected function emptyCheckCondition(string $data): bool
-    {
-        return empty($data);
-    }
-
-
-//    /**
-//     * @param array $data
-//     * @return array
-//     */
-//     public function correctCheck(array $data): array
-//     {
-//         $resultData = [];
-//         foreach ($data as $key => $value) {
-//             switch ($key) {
-//                 case 'login' :
-//                 case 'pass' :
-//                     $resultData[$key] = $this->pregMatchStrLen('/[A-Za-z0-9]{4,16}/u', $value);
-//                     break;
-//                 case 'pass_confirm' :
-//                     if ($value !== $data['pass']) {
-//                         $resultData[$key] = '';
-//                     }
-//                     break;
-//                 case 'name' :
-//                     $resultData[$key] = $this->severalLanguagesCheck($value);
-//                     break;
-//                 case 'birthdate' :
-//                     $resultData[$key] = $this->checkDate($value);
-//                     break;
-//                 case 'email' :
-//                     $resultData[$key] = $this->checkEmail($value);
-//                     break;
-//                 default :
-//                     $resultData[$key] = $this->lastFieldsCheck($key,$value);
-//             }
-//         }
-//         return $resultData;
-//     }
+         return $resultData;
+     }
 
     /**
-     * @param string $pattern
-     * @param string $dataString
-     * @return string
+     * @param string $field
+     * @param string $value
+     * @return string|null
+     * @throws \Exception
      */
+    protected function specificFieldsCorrectCheck(string $field, string $value): ?string
+    {
+        switch ($field) {
+            case 'phone' :
+                return $this->pregMatchStrLen('/^\+380\d{3}\d{2}\d{2}\d{2}$/', $value);
+            case 'address' :
+                return $this->pregMatchStrLen('/.{10,100}/u', $value);
+            default:
+                throw new \Exception('Field : \'' . $field . '\' doesn\'t exist!');
+        }
+    }
+
     protected function pregMatchStrLen(string $pattern, string $dataString): string
     {
-        preg_match($pattern, $dataString, $result);
-        if (isset($result[0])) {
-            return strlen($dataString) === strlen($result[0]) ? $result[0] : '';
-        } else {
-            return '';
+        preg_match($pattern, $dataString, $matches);
+        $result = '';
+        if (isset($matches[0])) {
+            $result = strlen($dataString) === strlen($matches[0]) ? $matches[0] : $result;
         }
+
+        return $result;
     }
 
-    /**
-     * @param string $dataString
-     * @return string
-     */
     protected function severalLanguagesCheck(string $dataString): string
     {
         if ($this->pregMatchStrLen('/[А-Яа-я]{2,30}/u', $dataString) === '') {
@@ -115,39 +142,24 @@ abstract class Validator implements UserDataValidatorInterface
         }
     }
 
-    /**
-     * @param string $dateString
-     * @return string
-     */
     protected function checkDate(string $dateString): string
     {
+        $result = '';
         $arr = explode(".", $dateString);
-        if (count($arr) !== 3) {
-            return '';
-        } else {
-            return checkdate((int) $arr[1], (int) $arr[0], (int) $arr[2]) ? $dateString : '';
+        if (count($arr) === 3 && checkdate((int) $arr[1], (int) $arr[0], (int) $arr[2])) {
+            $result = $dateString;
         }
+
+        return $result;
     }
 
-    /**
-     * @param string $emailString
-     * @return string
-     */
     protected function checkEmail(string $emailString): string
     {
-        if ($emailString !== '') {
-            return filter_var($emailString, FILTER_VALIDATE_EMAIL) ? $emailString : '';
-        } else {
-            return '';
-        }
+        return filter_var($emailString, FILTER_VALIDATE_EMAIL) ? $emailString : '';
     }
 
-    /**
-     * @param string $field
-     * @param string $value
-     * @return mixed
-     */
-    abstract protected function lastFieldsCheck(string $field, string $value);
-
-    abstract public function correctCheck(array $data): array;
+    protected function checkResult(): ?string
+    {
+        return 'not_necessary';
+    }
 }

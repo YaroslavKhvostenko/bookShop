@@ -7,9 +7,6 @@ use Controllers\AbstractControllers\AbstractIndexController;
 use Models\ProjectModels\DefaultModel;
 use Views\ProjectViews\DefaultView;
 
-/**
- * @package Controllers\ProjectControllers
- */
 class IndexController extends AbstractIndexController
 {
     public function __construct()
@@ -17,13 +14,13 @@ class IndexController extends AbstractIndexController
         parent::__construct(new DefaultModel(), new DefaultView());
     }
 
-    protected function adminStatus(): bool
+    protected function prepareRedirect(string $url = null): void
     {
-        return $this->defaultModel->isAdmin();
+        $this->redirect('admin/');
     }
 
-    protected function redirectLocation(string $url = null): void
+    protected function validateRequest(): bool
     {
-        $this->location('admin/');
+        return $this->defaultModel->isSigned() && $this->defaultModel->isAdmin();
     }
 }

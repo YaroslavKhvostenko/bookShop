@@ -5,9 +5,6 @@ namespace Models\ProjectModels\File;
 
 use Interfaces\IDataManagement;
 
-/**
- * @package Models\ProjectModels\File
- */
 class Manager implements IDataManagement
 {
     private const MEDIA_IMAGES_PATH = 'Media/images/';
@@ -30,8 +27,16 @@ class Manager implements IDataManagement
 
     private array $data;
 
+    /**
+     * Manager constructor.
+     * @throws \Exception
+     */
     public function __construct()
     {
+        if (empty($_FILES)) {
+            throw new \Exception('Проблема при загрузке глобального массива $_FILES');
+        }
+
         $this->data = $_FILES;
     }
 
@@ -40,26 +45,16 @@ class Manager implements IDataManagement
         return $this->data['image']['error'] !== UPLOAD_ERR_NO_FILE;
     }
 
-    /**
-     * @return string
-     */
     public function getFileName(): string
     {
         return $this->data['image']['name'];
     }
 
-    /**
-     * @return string
-     */
     public function getFileTmpName(): string
     {
         return $this->data['image']['tmp_name'];
     }
 
-    /**
-     * @param string $belongToType
-     * @return string
-     */
     public function getFullImagePath(string $belongToType): string
     {
         return self::MEDIA_IMAGES_PATH . self::IMAGE_FOLDER[$belongToType];

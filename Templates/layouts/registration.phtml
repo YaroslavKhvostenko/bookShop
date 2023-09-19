@@ -1,15 +1,5 @@
 <?php /** @var $options array */ ?>
 <h2>Добро пожаловать! Пройдите регистрацию</h2>
-<?php //echo $options['data']['errMsg'] ?? '' ?>
-<?php
-//if (isset($options['data']['resultMsg']) && is_array($options['data']['resultMsg'])) {
-//    foreach ($options['data']['resultMsg'] as $msg) {
-//        echo $msg . '<br>';
-//    }
-//} elseif (isset($options['data']['resultMsg'])) {
-//    echo $options['data']['resultMsg'] . '<br>';
-//}
-?>
 <form action="/user/new/users" method="post" enctype="multipart/form-data">
     <label>Логин(только латинские буквы и цифры,от 4 до 16 символов):</label>
     <input name="login" type="text" />

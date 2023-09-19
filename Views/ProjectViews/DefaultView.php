@@ -5,10 +5,6 @@ namespace Views\ProjectViews;
 
 use Views\AbstractViews\AbstractDefaultView;
 
-/**
- * Class DefaultView
- * @package Views\ProjectViews
- */
 class DefaultView extends AbstractDefaultView
 {
     protected function getContentPath(): string

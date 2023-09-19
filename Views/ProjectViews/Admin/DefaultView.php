@@ -5,10 +5,6 @@ namespace Views\ProjectViews\Admin;
 
 use Views\AbstractViews\AbstractDefaultView;
 
-/**
- * Class DefaultView
- * @package Views\ProjectViews\Admin
- */
 class DefaultView extends AbstractDefaultView
 {
     protected const ADMIN_LAYOUTS = 'admin/';

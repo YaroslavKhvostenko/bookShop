@@ -12,28 +12,11 @@ use Models\ProjectModels\Post;
 use Models\ProjectModels\File;
 use Models\ProjectModels\Config;
 
-/**
- * Main class for routing
- *
- * @package Controllers
- */
 class FrontController
 {
-    /**
-     * Given controller
-     */
     protected string $controller;
-    /**
-     * Given action
-     */
     protected string $action;
-    /**
-     * Given params values
-     */
     protected ?array $params = null;
-    /**
-     * Object for access to server data
-     */
     private IDataManagement $serverInfo;
     public Logger $logger;
 
@@ -59,17 +42,9 @@ class FrontController
         $register = DataRegistry::getInstance();
         $register->register('server', new Server\Manager())
             ->register('session', new Session\Manager())
-            ->register('post', new Post\Manager())
-            ->register('file', new File\Manager())
             ->register('config', new Config\Manager);
     }
 
-    /**
-     * Choose the correct controller and action using reflectionClass
-     *
-     * @return void
-     * @throws \ReflectionException
-     */
     public function route(): void
     {
         $this->start();
@@ -88,11 +63,6 @@ class FrontController
         }
     }
 
-    /**
-     * Definition and selecting controller and action
-     *
-     * @return void
-     */
     public function start(): void
     {
         $splits = explode('/', trim($this->getRequest(), '/'));
@@ -119,30 +89,16 @@ class FrontController
         }
     }
 
-    /**
-     * @return string
-     */
     public function getRequest(): string
     {
         return $this->serverInfo->getRequestUri();
     }
 
-    /**
-     * Return correct name for including file with class
-     *
-     * @param string $name
-     * @return string
-     */
     private function getFullControllerName(string $name): string
     {
         return '\Controllers\\ProjectControllers\\' . $name;
     }
 
-    /**
-     * Set http response code 404, and include 404 not found page
-     *
-     * @return void
-     */
     public function ErrorPage404(): void
     {
         http_response_code(404);

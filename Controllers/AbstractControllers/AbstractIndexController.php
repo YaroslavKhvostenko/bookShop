@@ -17,15 +17,10 @@ abstract class AbstractIndexController extends AbstractBaseController
         $this->defaultView = $defaultView;
     }
 
-    /**
-     * Render default page
-     *
-     * @return void
-     */
     public function indexAction(): void
     {
-        if ($this->defaultModel->isSigned() && $this->adminStatus()) {
-            $this->redirectLocation();
+        if ($this->validateRequest()) {
+            $this->prepareRedirect();
         } else {
             if ($this->defaultModel->isSigned()) {
                 $content = 'user_main.phtml';
@@ -38,5 +33,5 @@ abstract class AbstractIndexController extends AbstractBaseController
         $this->defaultView->render($options);
     }
 
-    abstract protected function adminStatus(): bool;
+    abstract protected function validateRequest(): bool;
 }

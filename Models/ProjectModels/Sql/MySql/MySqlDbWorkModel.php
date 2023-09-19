@@ -9,10 +9,6 @@ use Models\AbstractProjectModels\Sql\AbstractSqlModel;
 use Models\ProjectModels\Logger;
 use Models\ProjectModels\DataRegistry;
 
-/**
- * Class MySqlDbWorkModel for connect to database and select/insert/update/delete needed data
- * @package Models\ProjectModels\Sql\MySql
- */
 class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 {
     protected IDataManagement $config;
@@ -40,7 +36,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                 'Error connection to data base.' . "\n" .
                 "Error: "      . $PDOException->getMessage() . "\n" .
                 'File: '      . $PDOException->getFile() . "\n" .
-                'Строка: '    . $PDOException->getLine());
+                'Line: '    . $PDOException->getLine());
         }
     }
 
@@ -75,6 +71,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         }
         try {
             $result = $this->pdo->query($sql);
+
             return $result->fetchAll();
         } catch (\PDOException $PDOException) {
             $this->logger->log('pdo', $PDOException->getMessage() . $PDOException->getTraceAsString());
@@ -113,8 +110,8 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
             foreach ($data as $field => $value) {
                 $stmt->bindValue(":{$field}", $value);
             }
-            return $stmt->execute();
 
+            return $stmt->execute();
         } catch (\PDOException $exception) {
             $this->logger->log('pdo', $exception->getMessage() . $exception->getTraceAsString());
         }

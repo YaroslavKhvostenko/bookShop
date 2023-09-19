@@ -34,9 +34,6 @@ class ImageValidator
         return !$this->errors;
     }
 
-    /**
-     * @return bool
-     */
     private function checkType(): bool
     {
         return $this->fileData['image']['type'] == 'image/jpeg' || $this->fileData['image']['type'] == 'image/png';
@@ -47,7 +44,7 @@ class ImageValidator
         return $this->fileData['image']['size'] <= self::IMG_MAX_SIZE[$belongToType];
     }
 
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }

@@ -5,13 +5,10 @@ namespace Controllers\AbstractControllers;
 
 abstract class AbstractBaseController
 {
-    /**
-     * @param string|null $url
-     */
-    protected function location(string $url = null): void
+    protected function redirect(string $url = null): void
     {
         header('Location: /' . $url);
     }
 
-    abstract protected function redirectLocation(string $url = null): void;
+    abstract protected function prepareRedirect(string $url = null): void;
 }

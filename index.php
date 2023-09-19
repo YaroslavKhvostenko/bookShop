@@ -20,4 +20,3 @@ session_start();
 
 $front = new Controllers\FrontController;
 $front->route();
-

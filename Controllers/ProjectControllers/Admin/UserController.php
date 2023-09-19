@@ -9,9 +9,6 @@ use Models\ProjectModels\Validation\Data\User\Admin\Validator;
 use Models\ProjectModels\Message\User\Admin\ResultMessageModel;
 use Controllers\AbstractControllers\AbstractUserController;
 
-/**
- * @package Controllers\ProjectControllers\Admin
- */
 class UserController extends AbstractUserController
 {
     public function __construct()
@@ -19,35 +16,23 @@ class UserController extends AbstractUserController
         parent::__construct(new UserModel(), new UserView(), new Validator(), new ResultMessageModel());
     }
 
-    /**
-     * if user is logged sends to homeLocation depending on if it is a simple user or admin user
-     */
-    protected function homeLocationByCustomerType(): void
+    protected function redirectHome(): void
     {
-        if ($this->userModel->isAdmin()) {
-            $this->redirectHomeLocation();
-        } else {
-            $this->location();
-        }
+        $this->redirect('admin/');
     }
 
-    protected function redirectHomeLocation(): void
+    protected function prepareRedirect(string $url = null): void
     {
-        $this->location('admin/');
+        $this->redirect('admin/' . $url);
     }
 
-    protected function redirectLocation(string $url = null): void
-    {
-        $this->location('admin/' . $url);
-    }
-
-    protected function logoutActionType(): void
+    protected function logoutByCustomerType(): void
     {
         if ($this->userModel->isAdmin()) {
             $this->userModel->logout();
-            $this->redirectHomeLocation();
+            $this->redirectHome();
         } else {
-            $this->location();
+            $this->redirect();
         }
     }
 }

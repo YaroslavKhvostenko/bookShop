@@ -23,42 +23,41 @@ abstract class AbstractUserModel extends AbstractDefaultModel
      * @param string $tableName
      * @param array $data
      * @return bool
+     * @throws \Exception
      */
     public function newUser(string $tableName, array $data): bool
     {
         if ($this->userExist($tableName, $data['login'], $data['email'], $data['phone'])) {
-            $this->msgModel->setMsg($this->msgModel->getMessage('registration','user_exist'));
+            $this->msgModel->setMsg($this->msgModel->getMessage('registration', 'user_exist'));
+
             return false;
         }
 
         $data['pass'] = password_hash($data['pass'], PASSWORD_BCRYPT);
-        if ($this->fileInfo->isImageSent()) {
+        if ($this->getFileInfo()->isImageSent()) {
             $data['image'] = $this->moveUploadFile($tableName);
         }
 
         if (!$this->db->insertData($tableName, $data)) {
             $this->msgModel->setMsg($this->msgModel->getMessage('registration', 'project_mistake'));
+
             return false;
         } else {
             $data = $this->setDbSpecialFieldsData($data);
             $this->setSessionData($data);
             $this->msgModel->setMsg($this->msgModel->getMessage('registration', 'user_reg_success'));
+
             return true;
         }
     }
 
     protected function setDbSpecialFieldsData(array $data): array
     {
-        $specialData['is_active'] = 1;
-        return array_merge($data, $specialData);
+        $data['is_active'] = '1';
+
+        return $data;
     }
 
-    /**
-     * @param string $tableName
-     * @param string $userLogin
-     * @param string|null $userEmail
-     * @return bool
-     */
     public function userExist(
         string $tableName,
         string $userLogin,
@@ -77,26 +76,28 @@ abstract class AbstractUserModel extends AbstractDefaultModel
 
         $fields = $this->getUserFields();
         $result = $this->db->selectData($tableName, $fields, $condition);
-        if ($result && $userEmail !== null) { // for registration don't need to fill @array $this->user
-            return true;
-        } elseif ($result) { //for login we need to fill @array $this->user
-            $this->user = $result[0];
-            return true;
+        if (!$result) {
+            return false;
         }
 
-        return false;
+        if (isset($result[0]) && $userEmail === null ) {
+            $this->user = $result[0];
+        }
+
+        return true;
     }
 
     /**
-     * Check type of user and login on site
      * @param string $tableName
      * @param array $data
      * @return bool
+     * @throws \Exception
      */
     public function login(string $tableName, array $data): bool
     {
         if (!$this->userExist($tableName, $data['login'])) {
             $this->msgModel->setMsg($this->msgModel->getMessage('login', 'user_not_exist'));
+
             return false;
         }
 
@@ -105,8 +106,9 @@ abstract class AbstractUserModel extends AbstractDefaultModel
             return false;
         }
 
-        if ($this->getUser()['is_active'] == 1) {
+        if ($this->getUser()['is_active'] === '1') {
             $this->setSessionData($this->getUser());
+
             return true;
         } else {
             $this->msgModel->setMsg($this->msgModel->getMessage('login', 'not_active'));
@@ -117,39 +119,49 @@ abstract class AbstractUserModel extends AbstractDefaultModel
 
     protected function getUserFields(): array
     {
-        return ['id', 'login', 'pass', 'name', 'birthdate',
-            'email', 'phone', 'address', 'image', 'is_active'];
+        return [
+            'id',
+            'login',
+            'pass',
+            'name',
+            'birthdate',
+            'email',
+            'phone',
+            'address',
+            'image',
+            'is_active'
+        ];
     }
 
-    /**
-     * returns data of existing user
-     * @return array
-     */
     public function getUser(): array
     {
         return $this->user;
     }
 
-    /**
-     * Set session data for a user
-     *
-     * @param array $userData
-     * @return void
-     */
     protected function setSessionData(array $userData): void
     {
+        $userData = array_filter(
+            $userData,
+            function (?string $value, string $key) {
+                return !($key === 'pass' || $value === null);
+            },
+            ARRAY_FILTER_USE_BOTH);
         foreach ($userData as $key => $value) {
-            if ($key == 'pass') {
-                continue;
-            }
             $this->sessionInfo->setUserData($key, $value);
         }
     }
 
+    /**
+     * @param string $userPass
+     * @param string|null $adminPass
+     * @return bool
+     * @throws \Exception
+     */
     protected function passwordVerify(string $userPass, string $adminPass = null): bool
     {
         if (!password_verify($userPass, $this->getUser()['pass'])) {
             $this->msgModel->setMsg($this->msgModel->getMessage('login', 'failed_pass'));
+
             return false;
         }
 
