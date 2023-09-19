@@ -1,0 +1,6 @@
+<?php /** @var $options array */ ?>
+
+<?php if(isset($options['user']['image'])): ?>
+<img src="/Media/images/users/<?= $options['user']['image'] ?>" alt="avatar" width="150px" height="150px">
+<?php endif; ?>
+<h3>Добро пожаловать <?= $options['user']['name'] ?>!</h3>

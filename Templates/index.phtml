@@ -1,0 +1,26 @@
+<?php /** @var $options array */ ?>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title><?php echo $options['title'] ?></title>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <?php include_once($options['header']) ?>
+    </div>
+    <div>
+        <?php include_once($options['messages']) ?>
+    </div>
+    <div>
+        <?php include_once($options['content']) ?>
+    </div>
+    <div class="footer">
+        <?php include_once($options['footer']) ?>
+    </div>
+</div>
+</body>
+
+</html>
