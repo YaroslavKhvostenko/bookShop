@@ -6,8 +6,8 @@ namespace Models\ProjectModels\Validation;
 class ImageValidator
 {
     private array $fileData;
-    private const USERS_IMG_SIZE = 'users';
-    private const ADMINS_IMG_SIZE = 'admins';
+    private const USERS_IMG_SIZE = 'user';
+    private const ADMINS_IMG_SIZE = 'admin';
     private const BOOKS_IMG_SIZE = 'book';
     private array $errors = [];
     private const IMG_MAX_SIZE = [

@@ -4,6 +4,7 @@ namespace Models\ProjectModels;
 
 class Logger
 {
+    private static Logger $instance;
     private const FILE_PATH = 'logs/';
     private const ADMINS_PATH = 'admins/';
     private const TYPE_PDO = 'pdo';
@@ -17,6 +18,29 @@ class Logger
         self::ACTIVITY => 'admins_activity.log'
     ];
 
+    private function __construct()
+    {
+
+    }
+
+    private function __clone()
+    {
+
+    }
+
+    private function __wakeup()
+    {
+
+    }
+
+    public static function getInstance(): Logger
+    {
+        if (!isset(self::$instance)) {
+            self::$instance = new self;
+        }
+        return self::$instance;
+    }
+
     public function log(string $typeFile, string $msgData): void
     {
         $filePath = $typeFile === 'activity' ? self::FILE_PATH . self::ADMINS_PATH : self::FILE_PATH;
@@ -26,5 +50,24 @@ class Logger
             $data . PHP_EOL,
             FILE_APPEND
         );
+    }
+
+    public function exceptionLog(\Exception $exception, $msg = null): void
+    {
+        if ($exception instanceof \ReflectionException) {
+            $type = self::TYPE_REFLECTION;
+        } elseif ($exception instanceof \PDOException) {
+            $type = self::TYPE_PDO;
+        } else {
+            $type = self::TYPE_DEFAULT;
+        }
+
+        if ($msg === null) {
+            $msg = $exception->getMessage() . "\n" . $exception->getTraceAsString();
+        } else {
+            $msg .= "\n" . $exception->getTraceAsString();
+        }
+
+        $this->log($type, $msg);
     }
 }

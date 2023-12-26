@@ -1,5 +1,12 @@
-<?php /** @var $options array */ ?>
+<?php
+/**
+ * @var $options array
+ */
+?>
 <?php if(isset($options['user']['image'])): ?>
     <img src="/Media/images/admin_users/<?= $options['user']['image'] ?>" alt="avatar" width="150px" height="150px">
 <?php endif; ?>
 <h1>Добро пожаловать о великий Админ!</h1>
+<div class="sidebar">
+    <?php include_once 'user_sidebar.phtml'?>
+</div>

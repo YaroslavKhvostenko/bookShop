@@ -12,8 +12,14 @@ spl_autoload_register(function ($class) {
     $path = str_replace('\\', '/', $class) . '.php';
     if (file_exists($path)) {
         require_once($path);
+    } else {
+        $path = str_replace('\\', '/', $class) . '.phtml';
+        if (file_exists($path)) {
+            require_once($path);
+        }
     }
 });
+
 
 session_start();
 //session_destroy();

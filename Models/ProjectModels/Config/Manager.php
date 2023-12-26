@@ -31,10 +31,14 @@ class Manager implements IDataManagement
         return $this->data['db_params'];
     }
 
+    /**
+     * @return string
+     * @throws \Exception
+     */
     public function getAdminPass(): string
     {
         if (!isset($this->data['admin_pass'])) {
-            throw new \PDOException('Admin password does not exist!');
+            throw new \Exception('Admin password does not exist!');
         }
 
         return $this->data['admin_pass'];
