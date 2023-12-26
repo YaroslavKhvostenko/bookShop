@@ -1,0 +1,58 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\UserView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'user_sidebar.phtml'?>
+</div>
+<ul>
+    <?php
+    foreach ($options['data'] as $field => $value) {
+        echo '<li>' . $this->getUserProfile($field, $value) . '</li>';
+    }
+    ?>
+</ul>
+<!--<div>-->
+<!--    <ul>-->
+<!--        <li>Логин : --><?//= $options['data']['login'] ?><!-- <a href="/user/change/login" style="color: blue">Изменить</a></li>-->
+<!--        <li>Пароль : --><?//= $options['data']['pass'] ?><!-- <a href="/user/change/pass" style="color: blue">Изменить</a></li>-->
+<!--        <li>Имя : --><?//= $options['data']['name'] ?><!-- <a href="/user/change/name" style="color: blue">Изменить</a></li>-->
+<!--        <li>Дата Рождения : --><?//= $options['data']['birthdate'] ?><!-- <a href="/user/change/birthdate" style="color: blue">Изменить</a></li>-->
+<!--        <li>Почта : --><?//= $options['data']['email'] ?><!-- <a href="/user/change/email" style="color: blue">Изменить</a></li>-->
+<!--        <li>Телефон : --><?php //if (isset($options['data']['phone'])) {
+//            echo $options['data']['phone'];
+//            } else {
+//            echo 'Вы не указали данные!';
+//            } ?>
+<!--            --><?php //if (isset($options['data']['phone'])) {
+//               echo "<a href='/user/change/phone' style='color: blue'>Изменить</a>/<a href='/user/delete/users/phone' style='color: red'>Удалить</a>";
+//            } else {
+//                echo "<a href='/user/add/phone' style='color: green'>Добавить</a>";
+//            }?>
+<!--            </li>-->
+<!--        <li>Адресс : --><?php //if (isset($options['data']['address'])) {
+//                echo $options['data']['address'];
+//            } else {
+//                echo 'Вы не указали данные!';
+//            } ?>
+<!--            --><?php //if (isset($options['data']['address'])) {
+//                echo "<a href='/user/change/address' style='color: blue'>Изменить</a>/<a href='/user/delete/users/address' style='color: red'>Удалить</a>";
+//            } else {
+//                echo "<a href='/user/add/address' style='color: green'>Добавить</a>";
+//            }?>
+<!--        </li>-->
+<!--        <li>Аватар : --><?php //if (isset($options['data']['image'])) {
+//                echo "<img src='/Media/images/users/{$options['data']['image']}' alt='avatar' width='150px' height='150px'>";
+//            } else {
+//                echo 'Вы не указали данные!';
+//            } ?>
+<!--            --><?php //if (isset($options['data']['image'])) {
+//                echo "<a href='/user/change/image' style='color: blue'>Изменить</a>/<a href='/user/delete/users/image' style='color: red'>Удалить</a>";
+//            } else {
+//                echo "<a href='/user/add/image' style='color: green'>Добавить</a>";
+//            }?>
+<!--        </li>-->
+<!--    </ul>-->
+<!--</div>-->

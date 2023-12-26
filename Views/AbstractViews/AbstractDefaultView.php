@@ -50,5 +50,25 @@ abstract class AbstractDefaultView
         return self::LAYOUTS_PATH;
     }
 
+    protected function reqCustomer(): string
+    {
+        return $this->serverInfo->getRequestOption('customer');
+    }
+
+    protected function reqController(): string
+    {
+        return $this->serverInfo->getRequestOption('controller');
+    }
+
+    protected function reqAction(): string
+    {
+        return $this->serverInfo->getRequestOption('action');
+    }
+
+    protected function refAction(): string
+    {
+        return $this->serverInfo->getRefererOption('action');
+    }
+
     abstract protected function getContentPath(): string;
 }

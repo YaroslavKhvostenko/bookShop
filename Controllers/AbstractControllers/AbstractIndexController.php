@@ -33,5 +33,14 @@ abstract class AbstractIndexController extends AbstractBaseController
         $this->defaultView->render($options);
     }
 
+    protected function exceptionCatcher(
+        \Exception $exception,
+        string $controller = null,
+        string $action = null,
+        string $params = null
+    ): void {
+        // временная затычка для теоретически ьудущего использования
+    }
+
     abstract protected function validateRequest(): bool;
 }

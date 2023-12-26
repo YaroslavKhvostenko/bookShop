@@ -1,6 +1,10 @@
-<?php /** @var $options array */ ?>
+<?php
+/**
+ * @var $options array
+ */
+?>
 <h2>Добро пожаловать! Пройдите регистрацию</h2>
-<form action="/user/new/users" method="post" enctype="multipart/form-data">
+<form action="/user/create" method="post" enctype="multipart/form-data">
     <label>Логин(только латинские буквы и цифры,от 4 до 16 символов):</label>
     <input name="login" type="text" />
     <br>

@@ -16,11 +16,15 @@ class Manager implements IDataManagement
 
     public function isPost(): bool
     {
-        return $_SERVER['REQUEST_METHOD'] == 'POST' && !empty($this->data);
+        return $_SERVER['REQUEST_METHOD'] == 'POST';
     }
 
-    public function getPostData(): array
+    public function getData(): array
     {
+        if (empty($this->data)) {
+            throw new \Exception('Массив $_POST пустой!');
+        }
+
         return $this->data;
     }
 }

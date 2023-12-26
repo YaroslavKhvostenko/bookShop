@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Controllers\AbstractControllers;
 
-abstract class AbstractBaseController
+use Models\AbstractProjectModels\Exception\Controllers\AbstractExceptionModel;
+
+abstract class AbstractBaseController extends AbstractExceptionModel
 {
     protected function redirect(string $url = null): void
     {

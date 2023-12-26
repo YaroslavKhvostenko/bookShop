@@ -1,0 +1,450 @@
+<?php
+declare(strict_types=1);
+
+namespace Views\AbstractViews;
+
+abstract class AbstractUserView extends AbstractDefaultView
+{
+    protected const IMAGES_ADDRESS = '/Media/images/';
+    protected const EMPTY_SPACE = ' ';
+    protected const PROFILE_ITEM_TITLES_RU = [
+        'login' => 'Ваш Логин : ',
+        'pass' => 'Ваш Пароль : ',
+        'name' => 'Ваше Имя : ',
+        'birthdate' => 'Ваша Дата Рождения : ',
+        'email' => 'Ваша Почта : ',
+        'phone' => 'Ваш Телефон : ',
+        'address' => 'Ваш Аддресс : ',
+        'image' => 'Ваш Аватар : '
+    ];
+    protected array $profileItems = [
+        'required' => self::REQUIRED_PROFILE_ITEMS,
+        'not_required' => self::NOT_REQUIRED_PROFILE_ITEMS
+    ];
+    private const REQUIRED_PROFILE_ITEMS = [
+        'login' => 'login',
+        'pass' => 'pass',
+        'name' => 'name',
+        'birthdate' => 'birthdate',
+        'email' => 'email'
+    ];
+    private const NOT_REQUIRED_PROFILE_ITEMS = [
+        'image' => 'image'
+    ];
+    protected array $actions = [
+        'href' => self::PROFILE_LIST_ACTIONS,
+        'form' => self::FORM_ACTIONS
+    ];
+    private const PROFILE_LIST_ACTIONS = [
+        'change' => self::CHANGE_ACTION,
+        'add' => self::ADD_ACTION,
+        'remove' => self::REMOVE_ACTION
+    ];
+    private const CHANGE_ACTION = [
+        'uri' => 'change',
+        'title' => 'Изменить',
+        'color' => 'blue'
+    ];
+    private const ADD_ACTION = [
+        'uri' => 'add',
+        'title' => 'Добавить',
+        'color' => 'green'
+    ];
+    private const REMOVE_ACTION = [
+        'uri' => 'remove',
+        'title' => 'Удалить',
+        'color' => 'red'
+    ];
+    private const FORM_ACTIONS = [
+        'change' => self::UPDATE_ACTION,
+        'add' => self::NEW_ACTION,
+        'remove' => self::DELETE_ACTION
+    ];
+    private const UPDATE_ACTION = [
+        'uri' => 'update',
+        'title' => 'Изменить'
+    ];
+    private const NEW_ACTION = [
+        'uri' => 'new',
+        'title' => 'Добавить'
+    ];
+    private const DELETE_ACTION = [
+        'uri' => 'delete',
+        'title' => 'Удалить'
+    ];
+    protected array $messages = [
+        'recommend' => self::RECOMMEND_MSGS,
+        'remove' => self::REMOVE_MSGS
+    ];
+    private const RECOMMEND_MSGS = [
+        'login' => 'Только латинские буквы и цифры,от 4 до 16 символов!',
+        'pass' => 'Только латинские буквы и цифры,от 4 до 16 символов!',
+        'name' => 'Только латинские буквы или только кириллица, от 2 до 30 символов!',
+        'birthdate' => 'Пример: День.месяц.год = 01.01.2000',
+        'email' => 'Пример: vasha.pochta@gmail.com',
+        'phone' => 'Пример: +380661234567',
+        'address' => 'Пример: г.Киев, д.15, кв.69',
+        'image' => 'Не более 500 килобайт! Только jpeg или png!'
+    ];
+    private const REMOVE_MSGS = [
+        'image' => 'Вы уверены что хотите удалить ваш аватар : ',
+    ];
+    protected array $formMethods = [
+        'post' => 'post'
+    ];
+    protected array $formOptions = [
+        'change' => self::UPDATE_FORM_OPTIONS,
+        'add' => self::ADD_FORM_OPTIONS
+    ];
+    private const UPDATE_FORM_OPTIONS = [
+        'login' => self::LOGIN_OPTIONS,
+        'pass' => self::PASS_OPTIONS,
+        'name' => self::NAME_OPTIONS,
+        'birthdate' => self::BIRTHDATE_OPTIONS,
+        'email' => self::EMAIL_OPTIONS,
+        'phone' => self::PHONE_OPTIONS,
+        'address' => self::ADDRESS_OPTIONS,
+        'image' => self::IMAGE_OPTIONS
+    ];
+    private const LOGIN_OPTIONS = [
+        'field_name' => 'login',
+        'field_type' => 'text',
+        'field_value' => null
+    ];
+    private const PASS_OPTIONS = [
+        'old_pass' => self::OLD_PASS_OPTIONS,
+        'pass' => self::NEW_PASS_OPTIONS,
+        'pass_confirm' => self::NEW_PASS_CONFIRM_OPTIONS
+    ];
+    private const OLD_PASS_OPTIONS = [
+        'field_name' => 'old_pass',
+        'field_type' => 'password',
+        'field_value' => null
+    ];
+    private const NEW_PASS_OPTIONS = [
+        'field_name' => 'pass',
+        'field_type' => 'password',
+        'field_value' => null
+    ];
+    private const NEW_PASS_CONFIRM_OPTIONS = [
+        'field_name' => 'pass_confirm',
+        'field_type' => 'password',
+        'field_value' => null
+    ];
+    private const NAME_OPTIONS = [
+        'field_name' => 'name',
+        'field_type' => 'text',
+        'field_value' => null
+    ];
+    private const BIRTHDATE_OPTIONS = [
+        'field_name' => 'birthdate',
+        'field_type' => 'text',
+        'field_value' => null
+    ];
+    private const EMAIL_OPTIONS = [
+        'field_name' => 'email',
+        'field_type' => 'text',
+        'field_value' => null
+    ];
+    private const PHONE_OPTIONS = [
+        'field_name' => 'phone',
+        'field_type' => 'text',
+        'field_value' => '+380'
+    ];
+    private const ADDRESS_OPTIONS = [
+        'field_name' => 'address',
+        'field_type' => 'text',
+        'field_value' => null
+    ];
+    private const IMAGE_OPTIONS = [
+        'field_name' => 'image',
+        'field_type' => 'file',
+        'field_value' => null
+    ];
+    private const ADD_FORM_OPTIONS = [
+        'image' => self::IMAGE_OPTIONS
+    ];
+    protected array $formLabels = [
+        'change' => self::UPDATE_LABELS,
+        'add' => self::ADD_LABELS
+    ];
+    private const UPDATE_LABELS = [
+        'login' => 'Введите новый логин : ',
+        'old_pass' => 'Введите старый пароль : ',
+        'pass' => 'Введите новый пароль : ',
+        'pass_confirm' => 'Введите новый пароль еще раз : ',
+        'name' => 'Введите новое имя : ',
+        'birthdate' => 'Введите новую дату рождения : ',
+        'email' => 'Введите новый e-mail : ',
+        'phone' => 'Введите новый номер телефона : ',
+        'address' => 'Введите новый аддресс : ',
+        'image' => 'Выберите новую аватарку : ',
+    ];
+    private const ADD_LABELS = [
+        'image' => 'Выберите аватарку : '
+    ];
+    protected const BUTTON_TITLE = [
+        'change' => 'Изменить',
+        'add' => 'Добавить',
+        'remove' => 'Удалить'
+    ];
+    protected const BUTTON_TYPE = [
+        'submit' => 'submit'
+    ];
+
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * @param string $field
+     * @param string|null $value
+     * @return string
+     * @throws \Exception
+     */
+    public function getUserProfile(string $field, ?string $value = null): string
+    {
+        return $this->createUserProfile($field, $value);
+    }
+
+    /**
+     * @param string $field
+     * @param string|null $value
+     * @return string
+     * @throws \Exception
+     */
+    protected function createUserProfile(string $field, ?string $value = null): string
+    {
+        return $this->getFieldTitleRus($field) . $this->getItemValue($field, $value) . self::EMPTY_SPACE .
+            $this->getProfileActions($field, $value);
+    }
+
+    protected function getFieldTitleRus(string $field): string
+    {
+        return self::PROFILE_ITEM_TITLES_RU[$field];
+    }
+
+    protected function getItemValue(string $field, ?string $value = null): string // #2
+    {
+        if ($value !== null) {
+            if ($field === 'image') {
+                $value = "<img src='{$this->getAvatarAddress($value)}' alt='avatar' width='150px' height='150px'>";
+            }
+        } else {
+            $value = 'Вы не указали данные!';
+        }
+
+        return $value;
+    }
+
+    protected function getAvatarAddress(string $imageAddress = null): string
+    {
+        return $this->getImagesAddress();
+    }
+
+    private function getImagesAddress(): string
+    {
+        return self::IMAGES_ADDRESS;
+    }
+
+    /**
+     * @param string $field
+     * @param string|null $value
+     * @return string|null
+     * @throws \Exception
+     */
+    private function getProfileActions(string $field, ?string $value = null): ?string
+    {
+        if (!array_key_exists($field, $this->profileItems['required'])) {
+            if (array_key_exists($field, $this->profileItems['not_required'])) {
+                if ($value === null) {
+                    return $this->getActionHref($this->reqController(), 'add', $field);
+                } else {
+                    return $this->getActionHref($this->reqController(), 'change', $field) . ' / ' .
+                        $this->getActionHref($this->reqController(), 'remove', $field);
+                }
+            } else {
+                throw new \Exception(
+                    'Unknown field : ' . "'$field'" . ' during creating ' .
+                    $this->reqCustomer() . ' profile items list!'
+                );
+            }
+        } else {
+            return $this->getActionHref($this->reqController(), 'change', $field);
+        }
+    }
+
+    /**
+     * @param string $controllerName
+     * @param string $actionName
+     * @param string $fieldName
+     * @return string
+     * @throws \Exception
+     */
+    protected function getActionHref(string $controllerName, string $actionName, string $fieldName): string
+    {
+        $uri = $this->createUriString(
+            strtolower($controllerName),
+            strtolower($actionName),
+            strtolower($fieldName),
+            'href'
+        );
+        $href = "<a href='{$uri}' style='color:{$this->actions['href'][$actionName]['color']}'>";
+        $href .= "{$this->actions['href'][$actionName]['title']}" . '</a>';
+
+        return $href;
+    }
+
+    protected function getReqController(): string
+    {
+        return '/' . $this->reqController() . '/';
+    }
+
+    public function changesOfUserProfileItems(string $field, $value = null): string
+    {
+        $titleValue = '';
+        if ($this->reqAction() === 'remove') {
+            $titleValue = $this->messages['remove'][$field] . $this->getItemValue($field, $value) . '<br>';
+        } else {
+            if ($value !== null) {
+                $titleValue = $this->getFieldTitleRus($field) . $this->getItemValue($field, $value) . '<br>';
+            }
+            $titleValue = $this->messages['recommend'][$field] . '<br>' . $titleValue;
+        }
+
+        return $titleValue . $this->getForm($field);
+    }
+
+    protected function getForm(string $fieldName): string
+    {
+        return $this->formCreator($fieldName);
+    }
+
+    /**
+     * @param string $fieldName
+     * @return string
+     * @throws \Exception
+     */
+    protected function formCreator(string $fieldName): string
+    {
+        $formContent = '';
+        if ($fieldName === 'image' && $this->reqAction() !== 'remove') {
+            $imageForm = "enctype='multipart/form-data'";
+        } else {
+            $imageForm = null;
+        }
+
+        $uri = $this->createUriString(
+            strtolower($this->reqController()),
+            strtolower($this->reqAction()),
+            strtolower($fieldName),
+            'form'
+        );
+
+        $formStart = "<form action='$uri' method='{$this->formMethods['post']}' $imageForm>";
+        if ($this->reqAction() !== 'remove') {
+            $formContent = $this->getFormContent($fieldName);
+        }
+
+        $button = $this->buttonCreator('submit', $this->reqAction());
+        $formEnd = '</form>';
+
+        return $formStart . $formContent . $button . $formEnd;
+    }
+
+    /**
+     * @param string $controllerName
+     * @param string $actionName
+     * @param string $fieldName
+     * @param string $type
+     * @return string
+     * @throws \Exception
+     */
+    protected function createUriString(
+        string $controllerName,
+        string $actionName,
+        string $fieldName,
+        string $type
+    ): string {
+        if (!$this->validateController(strtolower($controllerName))) {
+            throw new \Exception('Unknown Controller name : ' . "'$controllerName'" . ', to create URI string!');
+        }
+
+        if (!$this->validateAction(strtolower($actionName))) {
+            throw new \Exception('Unknown Action name : ' . "'$actionName'" . ', to create URI string!');
+        }
+
+        return $this->getReqController() . $this->actions[$type][$actionName]['uri'] . '/' . $fieldName;
+    }
+
+    protected function validateController(string $controllerName): bool
+    {
+        switch ($controllerName) {
+            case 'user' : return true;
+            default : return false;
+        }
+    }
+
+    protected function validateAction(string $actionName): bool
+    {
+        switch ($actionName) {
+            case 'add' :
+            case 'change' :
+            case 'remove' : return true;
+            default : return false;
+        }
+    }
+
+    protected function getFormContent(string $fieldName): string
+    {
+        return $this->createFormContent($fieldName);
+    }
+
+    protected function createFormContent(string $fieldName): string
+    {
+        $content = '';
+        if ($fieldName === 'pass') {
+            foreach ($this->formOptions[$this->reqAction()][$fieldName] as $passFieldsArray) {
+                $content .= $this->formContentCreator($passFieldsArray);
+            }
+        } else {
+            $content = $this->formContentCreator($this->formOptions[$this->reqAction()][$fieldName]);
+        }
+
+        return $content;
+    }
+
+    private function formContentCreator(array $fieldFormContent): string
+    {
+        $name = $fieldFormContent['field_name'];
+        $type = $fieldFormContent['field_type'];
+        $value = $fieldFormContent['field_value'];
+        if ($value !== null) {
+            $value = "value='$value'";
+        }
+        $label = '<label>' . $this->formLabels[$this->reqAction()][$name] . '</label>';
+        $input = "<input name='$name' type='$type' $value/>" . '<br>';
+
+        return $label . $input;
+    }
+
+    protected function buttonCreator(string $type, string $actionName): string
+    {
+        $buttonType = $this->getButtonType($type);
+        $buttonTitle = $this->getButtonTitle($actionName);
+
+        return "<button type='$buttonType'>$buttonTitle</button>";
+    }
+
+    protected function getButtonType(string $type): string // # 13
+    {
+        return self::BUTTON_TYPE[$type];
+    }
+
+    protected function getButtonTitle(string $actionName): string // #14
+    {
+        return self::BUTTON_TITLE[$actionName];
+    }
+}

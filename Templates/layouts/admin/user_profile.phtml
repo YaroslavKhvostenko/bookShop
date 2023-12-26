@@ -1,0 +1,38 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\Admin\UserView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'user_sidebar.phtml'?>
+</div>
+<ul>
+    <?php
+    foreach ($options['data'] as $field => $value) {
+        echo '<li>' . $this->getUserProfile($field, $value) . '</li>';
+    }
+    ?>
+</ul>
+<!--<div>-->
+<!--    <ul>-->
+<!--        <li>Логин : --><?//= $options['data']['login'] ?><!-- <a href="/admin/user/change/login" style="color: blue">Изменить</a></li>-->
+<!--        <li>Пароль : --><?//= $options['data']['pass'] ?><!-- <a href="/admin/user/change/pass" style="color: blue">Изменить</a></li>-->
+<!--        <li>Имя : --><?//= $options['data']['name'] ?><!-- <a href="/admin/user/change/name" style="color: blue">Изменить</a></li>-->
+<!--        <li>Дата Рождения : --><?//= $options['data']['birthdate'] ?><!-- <a href="/admin/user/change/birthdate" style="color: blue">Изменить</a></li>-->
+<!--        <li>Почта : --><?//= $options['data']['email'] ?><!-- <a href="/admin/user/change/email" style="color: blue">Изменить</a></li>-->
+<!--        <li>Телефон : --><?//= $options['data']['phone'] ?><!-- <a href="/admin/user/change/phone" style="color: blue">Изменить</a></li>-->
+<!--        <li>Аддресс : --><?//= $options['data']['address'] ?><!-- <a href="/admin/user/change/address" style="color: blue">Изменить</a></li>-->
+<!--        <li>Аватар : --><?php //if (isset($options['data']['image'])) {
+//                echo "<img src='/Media/images/admin_users/{$options['data']['image']}' alt='avatar' width='150px' height='150px'>";
+//            } else {
+//                echo 'Вы не указали данные!';
+//            } ?>
+<!--            --><?php //if (isset($options['data']['image'])) {
+//                echo "<a href='/admin/user/change/image' style='color: blue'>Изменить</a>/<a href='/admin/user/delete/admins/image' style='color: red'>Удалить</a>";
+//            } else {
+//                echo "<a href='/admin/user/add/image' style='color: green'>Добавить</a>";
+//            }?>
+<!--        </li>-->
+<!--    </ul>-->
+<!--</div>-->
