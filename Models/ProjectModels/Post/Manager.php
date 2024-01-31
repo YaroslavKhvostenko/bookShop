@@ -19,6 +19,10 @@ class Manager implements IDataManagement
         return $_SERVER['REQUEST_METHOD'] == 'POST';
     }
 
+    /**
+     * @return array
+     * @throws \Exception
+     */
     public function getData(): array
     {
         if (empty($this->data)) {

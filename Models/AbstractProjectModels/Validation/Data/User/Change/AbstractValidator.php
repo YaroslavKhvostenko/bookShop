@@ -31,8 +31,8 @@ abstract class AbstractValidator extends AbstractUserValidator
                     $resultData[$field] = (!$value || $value === '+380') ? false : $value;
                     break;
                 default:
-                    throw new \Exception(
-                        'Unknown field :' . "'$field'" . 'during emptyCheck data of Change validation!'
+                    throw new \InvalidArgumentException(
+                        'Field \'' . $field . '\' does not exist in the provided data array.'
                     );
             }
         }
@@ -76,8 +76,8 @@ abstract class AbstractValidator extends AbstractUserValidator
                     $resultData[$field] = $this->pregMatchStrLen('/.{10,100}/u', $value);
                     break;
                 default :
-                    throw new \Exception(
-                        'Unknown field :' . "'$field'" . 'during correctCheck data of Change validation!'
+                    throw new \InvalidArgumentException(
+                        'Field \'' . $field . '\' does not exist in the provided data array.'
                     );
             }
         }
@@ -119,5 +119,40 @@ abstract class AbstractValidator extends AbstractUserValidator
     protected function checkEmail(string $emailString): string
     {
         return filter_var($emailString, FILTER_VALIDATE_EMAIL) ? $emailString : '';
+    }
+
+    /**
+     * @param string $fieldName
+     * @return string|null
+     * @throws \Exception
+     */
+    public function validateFieldName(string $fieldName): ?string
+    {
+        switch ($fieldName) {
+            case 'login' :
+            case 'pass' :
+            case 'name' :
+            case 'birthdate' :
+            case 'email' :
+            case 'address' :
+            case 'phone' :
+                return $fieldName;
+            default:
+                throw new \Exception(
+                    'Unknown field :' . "'$fieldName'" . 'from URI string,
+                     during Change validation in validateFieldName method!'
+                );
+        }
+    }
+
+    public function compareFieldNames(string $fieldName, array $data): void
+    {
+        if ($this->validateFieldName($fieldName) === $fieldName) {
+            if (!array_key_exists($fieldName, $data)) {
+                throw new \InvalidArgumentException(
+                    'Field \'' . $fieldName . '\' does not exist in the provided data array.'
+                );
+            }
+        }
     }
 }

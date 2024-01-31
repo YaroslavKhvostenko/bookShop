@@ -55,12 +55,13 @@ class Validator extends AbstractValidator
         $result = '';
         switch ($field) {
             case 'admin_pass' :
-                if ($value === $this->adminPass) {
+                if (password_verify($value, $this->adminPass)) {
                     $result = null;
                 }
 
                 return $result;
-            default : throw new \Exception(
+            default :
+                throw new \Exception(
                 'Unknown field :' . "'$field'" . 'during registration correctCheck data validation!'
             );
         }

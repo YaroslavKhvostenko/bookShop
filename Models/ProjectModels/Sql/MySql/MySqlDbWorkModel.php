@@ -29,7 +29,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         try {
             $this->pdo = new \PDO($dsn, $db_params['user'], $db_params['password'], $options);
         } catch (\PDOException $PDOException) {
-            $this->exceptionCatcher(
+            $this->catchException(
                 $PDOException,
                 'Error connection to data base.' . "\n" .
                 "Error: "      . $PDOException->getMessage() . "\n" .
@@ -82,7 +82,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 
             return $result->fetchAll();
         } catch (\PDOException $PDOException) {
-            $this->exceptionCatcher(
+            $this->catchException(
                 $PDOException,
                 'Error selecting data from DB.' . "\n" .
                 "Error: "      . $PDOException->getMessage() . "\n" .
@@ -127,7 +127,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 
             return $stmt->execute();
         } catch (\PDOException $PDOException) {
-            $this->exceptionCatcher(
+            $this->catchException(
                 $PDOException,
                 'Error inserting data to DB.' . "\n" .
                 "Error: "      . $PDOException->getMessage() . "\n" .
@@ -185,13 +185,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         try {
             return $this->pdo->exec($sql);
         } catch (\PDOException $PDOException) {
-            $this->exceptionCatcher(
-                $PDOException,
-                'Error updating data in DB.' . "\n" .
-                "Error: "      . $PDOException->getMessage() . "\n" .
-                'File: '      . $PDOException->getFile() . "\n" .
-                'Line: '    . $PDOException->getLine()
-            );
+            $this->catchException($PDOException, 'Error updating data in DB.');
         }
 
         return false;
@@ -200,11 +194,5 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
     public function getLastInsertedId(): string
     {
         return $this->pdo->lastInsertId();
-    }
-
-    protected function exceptionCatcher(\PDOException $exception, string $msg = null): void
-    {
-        $this->getLogger()->exceptionLog($exception, $msg);
-        $this->msgModel->errorMsgSetter();
     }
 }

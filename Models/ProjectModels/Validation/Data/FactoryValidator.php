@@ -20,19 +20,31 @@ class FactoryValidator
     {
         if (strtolower($userType) === 'user') {
             switch (strtolower($actionType)) {
-                case 'authorization' : return new User\Authorization\Validator();
-                case 'registration' : return new User\Registration\Validator();
-                case 'change' : return new User\Change\Validator();
-                case 'add' : return new User\Add\Validator();
+                case 'authorization' :
+                    return new User\Authorization\Validator();
+                case 'registration' :
+                    return new User\Registration\Validator();
+                case 'change' :
+                    return new User\Change\Validator();
+                case 'add' :
+                    return new User\Add\Validator();
+                case 'remove' :
+                    return new User\Remove\Validator();
                 default :
                     throw new \Exception("ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!");
             }
         } elseif (strtolower($userType) === 'admin') {
             switch (strtolower($actionType)) {
-                case 'authorization' : return new Admin\Authorization\Validator();
-                case 'registration' : return new Admin\Registration\Validator();
-                case 'change' : return new Admin\Change\Validator();
-                case 'add' : return new Admin\Add\Validator();
+                case 'authorization' :
+                    return new Admin\Authorization\Validator();
+                case 'registration' :
+                    return new Admin\Registration\Validator();
+                case 'change' :
+                    return new Admin\Change\Validator();
+                case 'add' :
+                    return new Admin\Add\Validator();
+                case 'remove' :
+                    return new Admin\Remove\Validator();
                 default :
                     throw new \Exception("ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!");
             }

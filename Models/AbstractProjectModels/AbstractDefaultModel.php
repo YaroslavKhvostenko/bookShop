@@ -5,15 +5,16 @@ namespace Models\AbstractProjectModels;
 
 use Interfaces\IDataManagement;
 use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
-use Models\AbstractProjectModels\Exception\Models\AbstractExceptionModel;
 use Models\ProjectModels\DataRegistry;
 use Models\ProjectModels\File;
+use Models\ProjectModels\Logger;
 
-abstract class AbstractDefaultModel extends AbstractExceptionModel
+abstract class AbstractDefaultModel
 {
     protected IDataManagement $sessionInfo;
     protected ?IDataManagement $fileInfo = null;
     protected ?AbstractBaseMsgModel $msgModel = null;
+    protected ?Logger $logger = null;
 
     /**
      * AbstractDefaultModel constructor.
@@ -68,12 +69,14 @@ abstract class AbstractDefaultModel extends AbstractExceptionModel
         try {
             switch ($fileType) {
                 case 'text_file' :
-                case 'image' : $this->getFileInfo()->deleteFile($fileType, $folder, $fileName);
+                case 'image' :
+                    $this->getFileInfo()->deleteFile($fileType, $folder, $fileName);
                     break;
-                default : throw new \Exception('Undefined fileType \'' . $fileType . '\' during deleting file!');
+                default :
+                    break;
             }
         } catch (\Exception $exception) {
-            $this->exceptionCatcher($exception);
+            $this->catchException($exception);
         }
     }
 
@@ -95,5 +98,19 @@ abstract class AbstractDefaultModel extends AbstractExceptionModel
         if (!$this->msgModel) {
             $this->msgModel = $msgModel;
         }
+    }
+
+    protected function catchException(\Exception $exception): void
+    {
+        $this->getLogger()->logException($exception);
+    }
+
+    protected function getLogger(): Logger
+    {
+        if (!$this->logger) {
+            $this->logger = Logger::getInstance();
+        }
+
+        return $this->logger;
     }
 }

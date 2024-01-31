@@ -236,7 +236,6 @@ abstract class AbstractUserModel extends AbstractDefaultModel
      * @param array $fieldsArray
      * @param array $dataArray
      * @return array
-     * @throws \Exception
      */
     public function arrayDataCreator(array $fieldsArray, array $dataArray): array
     {
@@ -247,7 +246,9 @@ abstract class AbstractUserModel extends AbstractDefaultModel
             } elseif ($field === 'phone' && !array_key_exists($field, $dataArray)) {
                 continue;
             } else {
-                throw new \Exception('Field: \'' . $field . '\' doesn\'t exist!');
+                throw new \InvalidArgumentException(
+                    'Field \'' . $field . '\' does not exist in the provided data array.'
+                );
             }
         }
 
@@ -274,7 +275,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
                 case 'address' :
                 case 'image' :
                     $result = $this->arrayDataCreator([$requestField], $this->getUserSessionData());
-                break;
+                    break;
                 default :
                     throw new \Exception('Field :' . "'$requestField'" . 'doesn\'t exist!');
 
@@ -300,6 +301,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
                 $this->msgModel->setMsg(
                     $this->msgModel->getMessage('failure', 'exist_' . $fieldName)
                 );
+
+                return;
             }
         }
 
@@ -331,6 +334,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
                 $this->msgModel->setMsg(
                     $this->msgModel->getMessage('failure', $fieldName)
                 );
+
+                return;
             }
         }
 
@@ -372,7 +377,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
                 case 'birthdate' :
                 case 'email' :
                 case 'phone' :
-                case 'address' : $result = $data[$fieldName] === $this->getUserSessionData()[$fieldName];
+                case 'address' :
+                    $result = $data[$fieldName] === $this->getUserSessionData()[$fieldName];
                     break;
                 default :
                     throw new \Exception(
@@ -465,6 +471,20 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         } else {
             throw new \Exception('Failure to delete data from session because it not exist there!');
         }
+    }
+
+    public function remove(string $fieldName): ?array
+    {
+        if (array_key_exists(strtolower($fieldName), $this->getUserSessionData())) {
+            $userData[strtolower($fieldName)] = $this->getUserSessionData()[strtolower($fieldName)];
+        } else {
+            throw new \Exception(
+                'Failure to get to remove_profile_item.phtml page,
+                     because incoming field from RequestUriString, doesn\'t exist in user session data!
+                    ');
+        }
+
+        return $userData;
     }
 
     protected function getCustomerTable(): string

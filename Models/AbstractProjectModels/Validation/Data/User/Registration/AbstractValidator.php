@@ -63,8 +63,8 @@ abstract class AbstractValidator extends AbstractUserValidator
 
                 return $result;
             default:
-                throw new \Exception(
-                    'Unknown field :' . "'$field'" . 'during registration emptyCheck data validation!'
+                throw new \InvalidArgumentException(
+                    'Field \'' . $field . '\' does not exist in the provided data array.'
                 );
         }
     }

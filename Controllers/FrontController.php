@@ -4,17 +4,18 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Interfaces\IDataManagement;
-use Models\AbstractProjectModels\Exception\Controllers\AbstractBaseExceptionModel;
 use Models\ProjectModels\DataRegistry;
+use Models\ProjectModels\Logger;
 use Models\ProjectModels\Server;
 use Models\ProjectModels\Session;
 use Models\ProjectModels\Config;
 
-class FrontController extends AbstractBaseExceptionModel
+class FrontController
 {
     protected string $controller;
     protected string $action;
     protected ?array $params = null;
+    private ?Logger $logger = null;
     private IDataManagement $serverInfo;
 
     public function __construct()
@@ -23,7 +24,7 @@ class FrontController extends AbstractBaseExceptionModel
             $this->registerData();
             $this->serverInfo = DataRegistry::getInstance()->get('server');
         } catch (\Exception $exception) {
-            $this->exceptionCatcher($exception);
+            $this->catchException($exception);
         }
     }
 
@@ -50,14 +51,7 @@ class FrontController extends AbstractBaseExceptionModel
             $action = $reflector->getMethod($this->action);
             $action->invoke($controller, $this->params);
         } catch (\ReflectionException $reflectionException) {
-            $this->exceptionCatcher(
-                $reflectionException,
-                'Creation error of ReflectionClass or ReflectionMethod.' . "\n" .
-                'Ошибка: '      . $reflectionException->getMessage() . "\n" .
-                'Файл: '      . $reflectionException->getFile() . "\n" .
-                'Строка: '    . $reflectionException->getLine()
-            );
-
+            $this->catchException($reflectionException, 'Creation error of ReflectionClass or ReflectionMethod.');
             $this->ErrorPage404();
         }
     }
@@ -105,12 +99,17 @@ class FrontController extends AbstractBaseExceptionModel
         die();
     }
 
-    protected function exceptionCatcher(
-        \Exception $exception,
-        string $msg = null,
-        string $firstUnusedParam = null,
-        string $secondUnusedParam = null
-    ): void {
-        $this->getLogger()->exceptionLog($exception, $msg);
+    private function catchException(\Exception $exception, string $msg = null): void
+    {
+        $this->getLogger()->logException($exception, $msg);
+    }
+
+    private function getLogger(): Logger
+    {
+        if (!$this->logger) {
+            $this->logger = Logger::getInstance();
+        }
+
+        return $this->logger;
     }
 }

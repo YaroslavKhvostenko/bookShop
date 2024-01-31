@@ -4,9 +4,8 @@ declare(strict_types=1);
 namespace Models\ProjectModels\File;
 
 use Interfaces\IDataManagement;
-use Models\AbstractProjectModels\Exception\Models\AbstractExceptionModel;
 
-class Manager extends AbstractExceptionModel implements IDataManagement
+class Manager implements IDataManagement
 {
     private const MEDIA_CONTENT_PATH = 'Media/';
     private const MEDIA_IMAGES_PATH = 'images/';
@@ -61,6 +60,7 @@ class Manager extends AbstractExceptionModel implements IDataManagement
         if (empty($this->data)) {
             throw new \Exception('Проблема при загрузке глобального массива $_FILES');
         }
+
         return $this->data;
     }
 
@@ -71,21 +71,16 @@ class Manager extends AbstractExceptionModel implements IDataManagement
      * @return bool
      * @throws \Exception
      */
-    public function moveUploadFile(string $fileType, string $folder, string $fileName): bool
+    public function moveUploadFile(string $fileType, string $folder, string $fileName): ?bool
     {
-        try {
-            if (!move_uploaded_file($this->getFileTmpName($fileType),
-                self::getFullFilePath($fileType, $folder) . $fileName)
-            ) {
-                throw new \Exception('Проблема с загрузкой файла на сервер. Проверьте путь или название файла!');
-            }
-
-            return true;
-        } catch (\Exception $exception) {
-            $this->exceptionCatcher($exception);
+        if (!move_uploaded_file(
+            $this->getFileTmpName($fileType),
+            self::getFullFilePath($fileType, $folder) . $fileName
+        )) {
+            throw new \Exception('Проблема с загрузкой файла на сервер. Проверьте путь или название файла!');
         }
 
-        return false;
+        return true;
     }
 
     public function createUniqueFileName(string $fileType, string $fileName = null): string
@@ -101,15 +96,17 @@ class Manager extends AbstractExceptionModel implements IDataManagement
      */
     public function deleteFile(string $fileType, string $folder, string $fileName): void
     {
-        try {
-            if (!unlink(self::getFullFilePath($fileType, $folder) . $fileName)) {
-                throw new \Exception(
-                    'Something happened. You have to delete image with your arms by address: ' .
-                    self::getFullFilePath($fileType, $folder) . $fileName
-                );
-            }
-        } catch (\Exception $exception) {
-            $this->exceptionCatcher($exception);
+        if (!unlink(self::getFullFilePath($fileType, $folder) . $fileName)) {
+            throw new \Exception(
+                'Something happened. You have to delete image with your arms by address: ' .
+                self::getFullFilePath($fileType, $folder) .
+                $fileName
+            );
         }
+    }
+
+    public function isDataEmpty(): bool
+    {
+        return empty($this->data);
     }
 }

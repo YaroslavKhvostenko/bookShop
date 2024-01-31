@@ -48,7 +48,9 @@ class Manager implements IDataManagement
 
     public function unsetAllMessages(): void
     {
-        unset($_SESSION[self::MESSAGE_KEY]);
+        if (array_key_exists(self::MESSAGE_KEY, $_SESSION)) {
+            unset($_SESSION[self::MESSAGE_KEY]);
+        }
     }
 
     public function setSessionMsg(string $msg, string $fieldName = null): void

@@ -48,4 +48,32 @@ class ImageValidator
     {
         return $this->errors;
     }
+
+    public static function validateFieldName($fieldName): ?string
+    {
+        switch ($fieldName) {
+            case 'image' :
+            case 'text_file' :
+                return $fieldName;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * @param string $fieldName
+     * @throws \Exception
+     */
+    public function compareFieldNames(string $fieldName)
+    {
+        if (self::validateFieldName($fieldName) !== $fieldName) {
+            throw new \Exception('Unknown field name : ' . "'$fieldName'" . ', from URI string!');
+        } else {
+            if (!array_key_exists($fieldName, $this->fileData)) {
+                throw new \Exception('Unknown field name : ' .
+                    "'$fieldName'" .
+                    ', during comparing field names form URI string and key from $_FILES!');
+            }
+        }
+    }
 }

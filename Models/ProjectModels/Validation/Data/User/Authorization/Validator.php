@@ -21,7 +21,7 @@ class Validator extends AbstractValidator
     }
 
     /**
-     * ЗАТЫЧКА !!!!
+     * TEMPORARY PLUG !!!!
      * @param array $data
      * @return array
      */

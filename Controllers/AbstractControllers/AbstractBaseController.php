@@ -3,10 +3,21 @@ declare(strict_types=1);
 
 namespace Controllers\AbstractControllers;
 
-use Models\AbstractProjectModels\Exception\Controllers\AbstractExceptionModel;
+use Models\ProjectModels\Logger;
 
-abstract class AbstractBaseController extends AbstractExceptionModel
+abstract class AbstractBaseController
 {
+    protected ?Logger $logger = null;
+
+    protected function getLogger(): Logger
+    {
+        if (!$this->logger) {
+            $this->logger = Logger::getInstance();
+        }
+
+        return $this->logger;
+    }
+
     protected function redirect(string $url = null): void
     {
         header('Location: /' . $url);

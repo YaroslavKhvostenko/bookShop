@@ -311,6 +311,7 @@ abstract class AbstractUserView extends AbstractDefaultView
             if ($value !== null) {
                 $titleValue = $this->getFieldTitleRus($field) . $this->getItemValue($field, $value) . '<br>';
             }
+
             $titleValue = $this->messages['recommend'][$field] . '<br>' . $titleValue;
         }
 
@@ -382,8 +383,10 @@ abstract class AbstractUserView extends AbstractDefaultView
     protected function validateController(string $controllerName): bool
     {
         switch ($controllerName) {
-            case 'user' : return true;
-            default : return false;
+            case 'user' :
+                return true;
+            default :
+                return false;
         }
     }
 
@@ -392,8 +395,10 @@ abstract class AbstractUserView extends AbstractDefaultView
         switch ($actionName) {
             case 'add' :
             case 'change' :
-            case 'remove' : return true;
-            default : return false;
+            case 'remove' :
+                return true;
+            default :
+                return false;
         }
     }
 
@@ -424,6 +429,7 @@ abstract class AbstractUserView extends AbstractDefaultView
         if ($value !== null) {
             $value = "value='$value'";
         }
+
         $label = '<label>' . $this->formLabels[$this->reqAction()][$name] . '</label>';
         $input = "<input name='$name' type='$type' $value/>" . '<br>';
 
@@ -438,12 +444,12 @@ abstract class AbstractUserView extends AbstractDefaultView
         return "<button type='$buttonType'>$buttonTitle</button>";
     }
 
-    protected function getButtonType(string $type): string // # 13
+    protected function getButtonType(string $type): string
     {
         return self::BUTTON_TYPE[$type];
     }
 
-    protected function getButtonTitle(string $actionName): string // #14
+    protected function getButtonTitle(string $actionName): string
     {
         return self::BUTTON_TITLE[$actionName];
     }

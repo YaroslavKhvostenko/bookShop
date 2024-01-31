@@ -8,7 +8,7 @@ use Models\AbstractProjectModels\Validation\Data\User\Add\AbstractValidator;
 class Validator extends AbstractValidator
 {
     /**
-     * ВРЕМЕННАЯ ЗАТЫЧКА
+     * TEMPORARY PLUG
      * @param array $data
      * @return array
      */
@@ -18,12 +18,32 @@ class Validator extends AbstractValidator
     }
 
     /**
-     * ВРЕМЕННАЯ ЗАТЫЧКА
+     * TEMPORARY PLUG
      * @param array $data
      * @return array
      */
     public function correctCheck(array $data): array
     {
         return $data;
+    }
+
+    /**
+     * @param string $fieldName
+     * @return string|null
+     * @throws \Exception
+     */
+    public function validateFieldName(string $fieldName): ?string
+    {
+        throw new \Exception('Admins can add only images to their profiles! Check the code!');
+    }
+
+    /**
+     * @param string $fieldName
+     * @param array|null $data
+     * @throws \Exception
+     */
+    public function compareFieldNames(string $fieldName, array $data = null): void
+    {
+        $this->validateFieldName($fieldName);
     }
 }

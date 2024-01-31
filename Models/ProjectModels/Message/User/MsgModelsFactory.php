@@ -28,11 +28,16 @@ class MsgModelsFactory
     {
         if (strtolower($userType) === 'user') {
             switch (strtolower($actionType)) {
-                case 'registration' : return new UserRegisterMsgModel();
-                case 'authorization' : return new UserAuthorizationMsgModel();
-                case 'add' : return new UserAddProfileItemMsgModel();
-                case 'change' : return new UserChangeProfileItemMsgModel();
-                case 'remove' : return new UserRemoveProfileItemMsgModel();
+                case 'registration' :
+                    return new UserRegisterMsgModel();
+                case 'authorization' :
+                    return new UserAuthorizationMsgModel();
+                case 'add' :
+                    return new UserAddProfileItemMsgModel();
+                case 'change' :
+                    return new UserChangeProfileItemMsgModel();
+                case 'remove' :
+                    return new UserRemoveProfileItemMsgModel();
                 default :
                     throw new \Exception(
                         "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
@@ -40,11 +45,16 @@ class MsgModelsFactory
             }
         } elseif (strtolower($userType) === 'admin') {
             switch (strtolower($actionType)) {
-                case 'registration' : return new AdminRegisterMsgModel();
-                case 'authorization' : return new AdminAuthorizationMsgModel();
-                case 'add' : return new AdminAddProfileItemMsgModel();
-                case 'change' : return new AdminChangeProfileItemMsgModel();
-                case 'remove' : return new AdminRemoveProfileItemMsgModel();
+                case 'registration' :
+                    return new AdminRegisterMsgModel();
+                case 'authorization' :
+                    return new AdminAuthorizationMsgModel();
+                case 'add' :
+                    return new AdminAddProfileItemMsgModel();
+                case 'change' :
+                    return new AdminChangeProfileItemMsgModel();
+                case 'remove' :
+                    return new AdminRemoveProfileItemMsgModel();
                 default :
                     throw new \Exception(
                     "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"

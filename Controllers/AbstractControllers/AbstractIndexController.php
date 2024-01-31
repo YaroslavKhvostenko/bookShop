@@ -22,24 +22,14 @@ abstract class AbstractIndexController extends AbstractBaseController
         if ($this->validateRequest()) {
             $this->prepareRedirect();
         } else {
+            $content = 'main.phtml';
             if ($this->defaultModel->isSigned()) {
                 $content = 'user_main.phtml';
-            } else {
-                $content = 'main.phtml';
             }
         }
 
         $options = $this->defaultView->getOptions('Главная', $content);
         $this->defaultView->render($options);
-    }
-
-    protected function exceptionCatcher(
-        \Exception $exception,
-        string $controller = null,
-        string $action = null,
-        string $params = null
-    ): void {
-        // временная затычка для теоретически ьудущего использования
     }
 
     abstract protected function validateRequest(): bool;

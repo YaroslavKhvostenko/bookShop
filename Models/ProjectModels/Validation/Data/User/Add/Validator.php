@@ -69,4 +69,34 @@ class Validator extends AbstractValidator
 
         return $result;
     }
+
+    /**
+     * @param string $fieldName
+     * @return string|null
+     * @throws \Exception
+     */
+    public function validateFieldName(string $fieldName): ?string
+    {
+        switch ($fieldName) {
+            case 'address' :
+            case 'phone' :
+                return $fieldName;
+            default:
+                throw new \Exception(
+                    'Unknown field :' . "'$fieldName'" . 'from URI string,
+                     during Add validation in validateFieldName method!'
+                );
+        }
+    }
+
+    public function compareFieldNames(string $fieldName, array $data = null): void
+    {
+        if ($this->validateFieldName($fieldName) === $fieldName) {
+            if (!array_key_exists($fieldName, $data)) {
+                throw new \InvalidArgumentException(
+                    'Field \'' . $fieldName . '\' does not exist in the provided data array.'
+                );
+            }
+        }
+    }
 }
