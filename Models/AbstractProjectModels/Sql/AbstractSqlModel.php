@@ -39,7 +39,7 @@ abstract class AbstractSqlModel
     protected function catchException(\Exception $exception, string $msg = null): void
     {
         $this->getLogger()->logException($exception, $msg);
-        $this->getMsgModel()->errorMsgSetter();
+        $this->getMsgModel()->setErrorMsg();
     }
 
     protected function getMsgModel(): AbstractBaseMsgModel

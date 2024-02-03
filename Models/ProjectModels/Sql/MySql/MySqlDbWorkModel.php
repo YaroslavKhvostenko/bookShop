@@ -95,12 +95,10 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
     }
 
     /**
-     * Method for insert data to database
-     *
      * @param string $tableName
      * @param array $data
      * @return bool
-     * @throws \PDOException
+     * @throws \Exception
      */
     public function insertData(string $tableName, array $data): bool
     {
@@ -140,12 +138,11 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
     }
 
     /**
-     * Update data in database
-     *
      * @param string $tableName
-     * @param array $data
-     * @param array $condition
+     * @param array $updateData
+     * @param array $conditionData
      * @return false|int
+     * @throws \Exception
      */
     public function updateData(string $tableName, array $updateData, array $conditionData)
     {
@@ -159,15 +156,12 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                 } else {
                     $sql .= "`{$key}`=NULL ";
                 }
-//                $sql .= "`{$key}`={$this->pdo->quote("$value")} ";
             } else {
                 if ($value !== null) {
                     $sql .= "`{$key}`={$this->pdo->quote("$value")}, ";
                 } else {
                     $sql .= "`{$key}`=NULL, ";
                 }
-
-//                $sql .= "`{$key}`={$this->pdo->quote("$value")}, "; 1434486929dark tower.jpg
             }
             $i++;
         }

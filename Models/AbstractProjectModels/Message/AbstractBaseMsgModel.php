@@ -72,11 +72,7 @@ abstract class AbstractBaseMsgModel
         $this->sessionInfo->unsetAllMessages();
     }
 
-    /**
-     * @param string|null $errorType
-     * @throws \Exception
-     */
-    public function errorMsgSetter(string $errorType = self::DEFAULT): void
+    public function setErrorMsg(string $errorType = self::DEFAULT): void
     {
         $this->unsetMessages();
         $this->setMsg($this->getMessage(self::PROJECT, $errorType), $errorType);

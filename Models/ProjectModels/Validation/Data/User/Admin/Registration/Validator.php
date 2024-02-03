@@ -24,7 +24,7 @@ class Validator extends AbstractValidator
      * @return bool|null
      * @throws \Exception
      */
-    protected function specificFieldsEmptyCheck(string $field, string $value): ?bool
+    protected function checkEmptySpecific(string $field, string $value): ?bool
     {
         $result = $this->emptyCheckResult();
         switch ($field) {
@@ -35,7 +35,7 @@ class Validator extends AbstractValidator
 
                 return $result;
             default:
-                return parent::specificFieldsEmptyCheck($field, $value);
+                return parent::checkEmptySpecific($field, $value);
         }
     }
 
@@ -50,7 +50,7 @@ class Validator extends AbstractValidator
      * @return string|null
      * @throws \Exception
      */
-    protected function specificFieldsCorrectCheck(string $field, string $value): ?string
+    protected function checkSpecificFields(string $field, string $value): ?string
     {
         $result = '';
         switch ($field) {

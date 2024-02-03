@@ -11,7 +11,7 @@ class Manager implements IDataManagement
     private array $data;
     private const REQUEST = 'request';
     private const REFERER = 'referer';
-    private const CUSTOMER = 'customer';
+    private const USER_TYPE = 'user_type';
     private const CONTROLLER = 'controller';
     private const ACTION = 'action';
     private const ADMIN = 'admin';
@@ -59,15 +59,18 @@ class Manager implements IDataManagement
             $result = $this->uriStringSplitter(parse_url($this->getReferer(), PHP_URL_PATH));
         }
 
-        if ($this->smallLettersWord($result[0]) === self::ADMIN) {
-            $this->serverOptions[$serverUriType][self::CUSTOMER] = $this->smallLettersWord($result[0]);
-            $this->serverOptions[$serverUriType][self::CONTROLLER] = $this->smallLettersWord($result[1]);
-            $this->serverOptions[$serverUriType][self::ACTION] = $this->smallLettersWord($result[2]);
+        $options = [];
+        if (strtolower($result[0]) === self::ADMIN) {
+            $options[self::USER_TYPE] = $result[0];
+            $options[self::CONTROLLER] = $result[1];
+            $options[self::ACTION] = $result[2];
         } else {
-            $this->serverOptions[$serverUriType][self::CUSTOMER] = self::USER;
-            $this->serverOptions[$serverUriType][self::CONTROLLER] = $this->smallLettersWord($result[0]);
-            $this->serverOptions[$serverUriType][self::ACTION] = $this->smallLettersWord($result[1]);
+            $options[self::USER_TYPE] = self::USER;
+            $options[self::CONTROLLER] = $result[0];
+            $options[self::ACTION] = $result[1];
         }
+
+        $this->serverOptions[$serverUriType] = $this->lowerCase($options);
     }
 
     /**
@@ -81,7 +84,7 @@ class Manager implements IDataManagement
             $this->initializeServerUriOptions(self::REQUEST);
         }
 
-        return $this->serverOptions[self::REQUEST][$this->smallLettersWord($requestOption)];
+        return $this->serverOptions[self::REQUEST][strtolower($requestOption)];
     }
 
     /**
@@ -95,7 +98,7 @@ class Manager implements IDataManagement
             $this->initializeServerUriOptions(self::REFERER);
         }
 
-        return $this->serverOptions[self::REFERER][$this->smallLettersWord($refererOption)];
+        return $this->serverOptions[self::REFERER][strtolower($refererOption)];
     }
 
     private function uriStringSplitter(string $uriString): array
@@ -103,9 +106,12 @@ class Manager implements IDataManagement
         return explode('/', trim($uriString, '/'));
     }
 
-
-    private function smallLettersWord(string $word): string
+    private function lowerCase(array $data): array
     {
-        return strtolower($word);
+        foreach ($data as $field => $value) {
+            $data[$field] = strtolower($value);
+        }
+
+        return $data;
     }
 }

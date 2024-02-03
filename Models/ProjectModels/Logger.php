@@ -40,6 +40,7 @@ class Logger
         if (!isset(self::$instance)) {
             self::$instance = new self;
         }
+
         return self::$instance;
     }
 
@@ -58,7 +59,7 @@ class Logger
     {
         $this->log(
             Exception\Manager::getTypeOfException($exception),
-            Exception\Manager::createMsgOfException($exception, $msgData)
+            Exception\Manager::createExceptionMessage($exception, $msgData)
         );
     }
 }

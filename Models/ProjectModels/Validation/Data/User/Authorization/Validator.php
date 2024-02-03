@@ -13,7 +13,7 @@ class Validator extends AbstractValidator
      * @return bool|null
      * @throws \Exception
      */
-    protected function specificFieldsEmptyCheck(string $field, string $value): ?bool
+    protected function checkEmptySpecific(string $field, string $value): ?bool
     {
         throw new \Exception(
             'Unknown field :' . "'$field'" . 'during authorization emptyCheck data validation!'

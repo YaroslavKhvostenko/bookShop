@@ -21,7 +21,7 @@ abstract class AbstractValidator extends AbstractUserValidator
                     $resultData[$field] = !$value ? false : $value;
                     break;
                 default:
-                    $result = $this->specificFieldsEmptyCheck($field, $value);
+                    $result = $this->checkEmptySpecific($field, $value);
                     if ($result === true) {
                         $resultData[$field] = $value;
                     } else {
@@ -33,5 +33,5 @@ abstract class AbstractValidator extends AbstractUserValidator
         return $resultData;
     }
 
-    abstract protected function specificFieldsEmptyCheck(string $field, string $value): ?bool;
+    abstract protected function checkEmptySpecific(string $field, string $value): ?bool;
 }

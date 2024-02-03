@@ -13,7 +13,7 @@ class Validator extends AbstractValidator
      * @return string|null
      * @throws \Exception
      */
-    protected function specificFieldsCorrectCheck(string $field, string $value): ?string
+    protected function checkSpecificFields(string $field, string $value): ?string
     {
         throw new \Exception(
             'Unknown field :' . "'$field'" . 'during registration correctCheck data validation!'

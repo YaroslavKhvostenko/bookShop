@@ -26,7 +26,7 @@ abstract class AbstractValidator extends AbstractUserValidator
                     $resultData[$field] = !$value ? false : $value;
                     break;
                 default:
-                    $result = $this->specificFieldsEmptyCheck($field, $value);
+                    $result = $this->checkEmptySpecific($field, $value);
                     if ($result === true) {
                         $resultData[$field] = $value;
                     } elseif ($result === false) {
@@ -46,7 +46,7 @@ abstract class AbstractValidator extends AbstractUserValidator
      * @return string|null
      * @throws \Exception
      */
-    protected function specificFieldsEmptyCheck(string $field, string $value): ?bool
+    protected function checkEmptySpecific(string $field, string $value): ?bool
     {
         $result = $this->emptyCheckResult();
         switch ($field) {
@@ -109,7 +109,7 @@ abstract class AbstractValidator extends AbstractUserValidator
                     $resultData[$key] = $this->pregMatchStrLen('/.{10,100}/u', $value);
                     break;
                 default :
-                    $result = $this->specificFieldsCorrectCheck($key, $value);
+                    $result = $this->checkSpecificFields($key, $value);
                     if ($result === '') {
                         $resultData[$key] = $result;
                     } else {
@@ -157,5 +157,5 @@ abstract class AbstractValidator extends AbstractUserValidator
         return filter_var($emailString, FILTER_VALIDATE_EMAIL) ? $emailString : '';
     }
 
-    abstract protected function specificFieldsCorrectCheck(string $field, string $value): ?string;
+    abstract protected function checkSpecificFields(string $field, string $value): ?string;
 }

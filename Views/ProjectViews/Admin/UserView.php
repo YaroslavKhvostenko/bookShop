@@ -27,9 +27,9 @@ class UserView extends AbstractUserView
         return parent::getAvatarAddress() . self::AVATAR_ADDRESS . $avatarTitle;
     }
 
-    protected function getReqController(): string
+    protected function getRequestController(): string
     {
-        return '/' . $this->reqCustomer() . parent::getReqController();
+        return '/' . $this->getRequestUserType() . parent::getRequestController();
     }
 
     protected function getContentPath(): string

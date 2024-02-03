@@ -50,22 +50,22 @@ abstract class AbstractDefaultView
         return self::LAYOUTS_PATH;
     }
 
-    protected function reqCustomer(): string
+    protected function getRequestUserType(): string
     {
         return $this->serverInfo->getRequestOption('customer');
     }
 
-    protected function reqController(): string
+    protected function getRequestController(): string
     {
         return $this->serverInfo->getRequestOption('controller');
     }
 
-    protected function reqAction(): string
+    protected function getRequestAction(): string
     {
         return $this->serverInfo->getRequestOption('action');
     }
 
-    protected function refAction(): string
+    protected function getRefererAction(): string
     {
         return $this->serverInfo->getRefererOption('action');
     }

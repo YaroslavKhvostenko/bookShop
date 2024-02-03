@@ -22,7 +22,7 @@ class Manager
         return $type;
     }
 
-    public static function createMsgOfException(\Exception $exception, string $msg = null): string
+    public static function createExceptionMessage(\Exception $exception, string $msg = null): string
     {
         if ($msg !== null) {
             $msg .= "\n";

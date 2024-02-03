@@ -260,19 +260,19 @@ abstract class AbstractUserView extends AbstractDefaultView
         if (!array_key_exists($field, $this->profileItems['required'])) {
             if (array_key_exists($field, $this->profileItems['not_required'])) {
                 if ($value === null) {
-                    return $this->getActionHref($this->reqController(), 'add', $field);
+                    return $this->getActionHref($this->getRequestController(), 'add', $field);
                 } else {
-                    return $this->getActionHref($this->reqController(), 'change', $field) . ' / ' .
-                        $this->getActionHref($this->reqController(), 'remove', $field);
+                    return $this->getActionHref($this->getRequestController(), 'change', $field) . ' / ' .
+                        $this->getActionHref($this->getRequestController(), 'remove', $field);
                 }
             } else {
                 throw new \Exception(
                     'Unknown field : ' . "'$field'" . ' during creating ' .
-                    $this->reqCustomer() . ' profile items list!'
+                    $this->getRequestUserType() . ' profile items list!'
                 );
             }
         } else {
-            return $this->getActionHref($this->reqController(), 'change', $field);
+            return $this->getActionHref($this->getRequestController(), 'change', $field);
         }
     }
 
@@ -297,15 +297,15 @@ abstract class AbstractUserView extends AbstractDefaultView
         return $href;
     }
 
-    protected function getReqController(): string
+    protected function getgetRequestController(): string
     {
-        return '/' . $this->reqController() . '/';
+        return '/' . $this->getRequestController() . '/';
     }
 
     public function changesOfUserProfileItems(string $field, $value = null): string
     {
         $titleValue = '';
-        if ($this->reqAction() === 'remove') {
+        if ($this->getRequestAction() === 'remove') {
             $titleValue = $this->messages['remove'][$field] . $this->getItemValue($field, $value) . '<br>';
         } else {
             if ($value !== null) {
@@ -331,25 +331,25 @@ abstract class AbstractUserView extends AbstractDefaultView
     protected function formCreator(string $fieldName): string
     {
         $formContent = '';
-        if ($fieldName === 'image' && $this->reqAction() !== 'remove') {
+        if ($fieldName === 'image' && $this->getRequestAction() !== 'remove') {
             $imageForm = "enctype='multipart/form-data'";
         } else {
             $imageForm = null;
         }
 
         $uri = $this->createUriString(
-            strtolower($this->reqController()),
-            strtolower($this->reqAction()),
+            strtolower($this->getRequestController()),
+            strtolower($this->getRequestAction()),
             strtolower($fieldName),
             'form'
         );
 
         $formStart = "<form action='$uri' method='{$this->formMethods['post']}' $imageForm>";
-        if ($this->reqAction() !== 'remove') {
+        if ($this->getRequestAction() !== 'remove') {
             $formContent = $this->getFormContent($fieldName);
         }
 
-        $button = $this->buttonCreator('submit', $this->reqAction());
+        $button = $this->buttonCreator('submit', $this->getRequestAction());
         $formEnd = '</form>';
 
         return $formStart . $formContent . $button . $formEnd;
@@ -377,7 +377,7 @@ abstract class AbstractUserView extends AbstractDefaultView
             throw new \Exception('Unknown Action name : ' . "'$actionName'" . ', to create URI string!');
         }
 
-        return $this->getReqController() . $this->actions[$type][$actionName]['uri'] . '/' . $fieldName;
+        return $this->getgetRequestController() . $this->actions[$type][$actionName]['uri'] . '/' . $fieldName;
     }
 
     protected function validateController(string $controllerName): bool
@@ -411,11 +411,11 @@ abstract class AbstractUserView extends AbstractDefaultView
     {
         $content = '';
         if ($fieldName === 'pass') {
-            foreach ($this->formOptions[$this->reqAction()][$fieldName] as $passFieldsArray) {
+            foreach ($this->formOptions[$this->getRequestAction()][$fieldName] as $passFieldsArray) {
                 $content .= $this->formContentCreator($passFieldsArray);
             }
         } else {
-            $content = $this->formContentCreator($this->formOptions[$this->reqAction()][$fieldName]);
+            $content = $this->formContentCreator($this->formOptions[$this->getRequestAction()][$fieldName]);
         }
 
         return $content;
@@ -430,7 +430,7 @@ abstract class AbstractUserView extends AbstractDefaultView
             $value = "value='$value'";
         }
 
-        $label = '<label>' . $this->formLabels[$this->reqAction()][$name] . '</label>';
+        $label = '<label>' . $this->formLabels[$this->getRequestAction()][$name] . '</label>';
         $input = "<input name='$name' type='$type' $value/>" . '<br>';
 
         return $label . $input;
