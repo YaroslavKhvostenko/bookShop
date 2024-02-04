@@ -6,13 +6,11 @@ namespace Models\ProjectModels\Sql\MySql;
 use Interfaces\IMySqlInterface;
 use Interfaces\IDataManagement;
 use Models\AbstractProjectModels\Sql\AbstractSqlModel;
-use Models\ProjectModels\Logger;
 use Models\ProjectModels\DataRegistry;
 
 class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 {
     protected IDataManagement $config;
-    public Logger $logger;
     private \PDO $pdo;
 
     /**
@@ -23,7 +21,6 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
      */
     public function __construct()
     {
-        $this->logger = new Logger();
         $this->config = DataRegistry::getInstance()->get('config');
         $db_params = $this->config->getDBdata();
         $options = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_WARNING,
@@ -32,61 +29,76 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         try {
             $this->pdo = new \PDO($dsn, $db_params['user'], $db_params['password'], $options);
         } catch (\PDOException $PDOException) {
-            $this->logger->log('pdo',
+            $this->catchException(
+                $PDOException,
                 'Error connection to data base.' . "\n" .
                 "Error: "      . $PDOException->getMessage() . "\n" .
                 'File: '      . $PDOException->getFile() . "\n" .
-                'Line: '    . $PDOException->getLine());
+                'Line: '    . $PDOException->getLine()
+            );
         }
-    }
-
-    public function getConnection(): \PDO
-    {
-        return $this->pdo;
     }
 
     /**
      * Select data from database
      * @param string $tableName
-     * @param array $field
-     * @param string|null $condition
+     * @param array $requestFields
+     * @param string|null $conditionData
      * @return array|false
      */
-    public function selectData(string $tableName, array $field, string $condition = null)
+    public function selectData(string $tableName, array $requestFields, array $conditionData = null)
     {
         $sql = 'SELECT ';
         $i = 1;
-        $count = count($field);
-        foreach ($field as $value) {
-            if ($i == $count) {
-                $sql .= "`{$value}` ";
+        $count = count($requestFields);
+        foreach ($requestFields as $field) {
+            if ($i === $count) {
+                $sql .= "`{$field}` ";
             } else {
-                $sql .= "`{$value}`, ";
+                $sql .= "`{$field}`, ";
             }
             $i++;
         }
         $sql .= "FROM `{$tableName}`";
-        if ($condition) {
-            $sql .= " WHERE {$condition}";
+        if (isset($conditionData)) {
+            $i = 1;
+            $condition = ' WHERE ';
+            foreach ($conditionData as $field => $value) {
+                if (!is_string($value) && !is_int($value)) {
+                    throw new \Exception('Wrong data type!');
+                }
+
+                if ($i === 1) {
+                    $condition .= "`{$field}` = " . $this->pdo->quote($value);
+                } else {
+                    $condition .= " OR `{$field}` = " . $this->pdo->quote($value);
+                }
+                $i++;
+            }
+            $sql .= $condition;
         }
         try {
             $result = $this->pdo->query($sql);
 
             return $result->fetchAll();
         } catch (\PDOException $PDOException) {
-            $this->logger->log('pdo', $PDOException->getMessage() . $PDOException->getTraceAsString());
+            $this->catchException(
+                $PDOException,
+                'Error selecting data from DB.' . "\n" .
+                "Error: "      . $PDOException->getMessage() . "\n" .
+                'File: '      . $PDOException->getFile() . "\n" .
+                'Line: '    . $PDOException->getLine()
+            );
         }
 
         return false;
     }
 
     /**
-     * Method for insert data to database
-     *
      * @param string $tableName
      * @param array $data
      * @return bool
-     * @throws \PDOException
+     * @throws \Exception
      */
     public function insertData(string $tableName, array $data): bool
     {
@@ -112,10 +124,69 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
             }
 
             return $stmt->execute();
-        } catch (\PDOException $exception) {
-            $this->logger->log('pdo', $exception->getMessage() . $exception->getTraceAsString());
+        } catch (\PDOException $PDOException) {
+            $this->catchException(
+                $PDOException,
+                'Error inserting data to DB.' . "\n" .
+                "Error: "      . $PDOException->getMessage() . "\n" .
+                'File: '      . $PDOException->getFile() . "\n" .
+                'Line: '    . $PDOException->getLine()
+            );
         }
 
         return false;
+    }
+
+    /**
+     * @param string $tableName
+     * @param array $updateData
+     * @param array $conditionData
+     * @return false|int
+     * @throws \Exception
+     */
+    public function updateData(string $tableName, array $updateData, array $conditionData)
+    {
+        $sql = "UPDATE `{$tableName}` SET ";
+        $i = 1;
+        $count = count($updateData);
+        foreach ($updateData as $key => $value) {
+            if ($i === $count) {
+                if ($value !== null) {
+                    $sql .= "`{$key}`={$this->pdo->quote("$value")} ";
+                } else {
+                    $sql .= "`{$key}`=NULL ";
+                }
+            } else {
+                if ($value !== null) {
+                    $sql .= "`{$key}`={$this->pdo->quote("$value")}, ";
+                } else {
+                    $sql .= "`{$key}`=NULL, ";
+                }
+            }
+            $i++;
+        }
+        $i = 1;
+        $count = count($conditionData);
+        $condition = 'WHERE ';
+        foreach ($conditionData as $field => $value) {
+            if ($count === $i) {
+                $condition .= $field . ' IN ' . '(' . "'{$value}'" . ')';
+            }
+            $i++;
+        }
+
+        $sql .= $condition;
+        try {
+            return $this->pdo->exec($sql);
+        } catch (\PDOException $PDOException) {
+            $this->catchException($PDOException, 'Error updating data in DB.');
+        }
+
+        return false;
+    }
+
+    public function getLastInsertedId(): string
+    {
+        return $this->pdo->lastInsertId();
     }
 }

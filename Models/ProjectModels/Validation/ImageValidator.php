@@ -6,8 +6,8 @@ namespace Models\ProjectModels\Validation;
 class ImageValidator
 {
     private array $fileData;
-    private const USERS_IMG_SIZE = 'users';
-    private const ADMINS_IMG_SIZE = 'admins';
+    private const USERS_IMG_SIZE = 'user';
+    private const ADMINS_IMG_SIZE = 'admin';
     private const BOOKS_IMG_SIZE = 'book';
     private array $errors = [];
     private const IMG_MAX_SIZE = [
@@ -47,5 +47,33 @@ class ImageValidator
     public function getErrors(): array
     {
         return $this->errors;
+    }
+
+    public static function validateFieldName($fieldName): ?string
+    {
+        switch ($fieldName) {
+            case 'image' :
+            case 'text_file' :
+                return $fieldName;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * @param string $fieldName
+     * @throws \Exception
+     */
+    public function compareFieldNames(string $fieldName)
+    {
+        if (self::validateFieldName($fieldName) !== $fieldName) {
+            throw new \Exception('Unknown field name : ' . "'$fieldName'" . ', from URI string!');
+        } else {
+            if (!array_key_exists($fieldName, $this->fileData)) {
+                throw new \Exception('Unknown field name : ' .
+                    "'$fieldName'" .
+                    ', during comparing field names form URI string and key from $_FILES!');
+            }
+        }
     }
 }

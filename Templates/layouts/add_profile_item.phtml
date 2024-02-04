@@ -1,0 +1,18 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\UserView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'user_sidebar.phtml'?>
+</div>
+
+<div>
+    <?php
+    foreach ($options['data'] as $field => $value) {
+        echo $this->changesOfUserProfileItems($field, $value);
+    }
+    ?>
+</div>
+

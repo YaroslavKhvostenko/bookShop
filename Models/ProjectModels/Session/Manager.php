@@ -33,7 +33,7 @@ class Manager implements IDataManagement
         return $this->data[self::USER_KEY] ?? null;
     }
 
-    public function setUserData(string $key, $data): void
+    public function setUserData(string $key, string $data): void
     {
         $this->data[self::USER_KEY][$key] = $data;
         $_SESSION[self::USER_KEY] = $this->data[self::USER_KEY];
@@ -41,14 +41,25 @@ class Manager implements IDataManagement
 
     public function getAllMessages(): array
     {
-        unset($_SESSION[self::MESSAGE_KEY]);
+        $this->unsetAllMessages();
 
         return $this->messages;
     }
 
-    public function setSessionMsg(string $msg): void
+    public function unsetAllMessages(): void
     {
-        $_SESSION[self::MESSAGE_KEY][] = $msg;
+        if (array_key_exists(self::MESSAGE_KEY, $_SESSION)) {
+            unset($_SESSION[self::MESSAGE_KEY]);
+        }
+    }
+
+    public function setSessionMsg(string $msg, string $fieldName = null): void
+    {
+        if ($fieldName !== null) {
+            $_SESSION[self::MESSAGE_KEY][$fieldName] = $msg;
+        } else {
+            $_SESSION[self::MESSAGE_KEY][] = $msg;
+        }
     }
 
     public function isLogged(): bool
@@ -56,4 +67,8 @@ class Manager implements IDataManagement
         return isset($this->data[self::USER_KEY]);
     }
 
+    public function deleteUserData(string $field): void
+    {
+        unset($_SESSION[self::USER_KEY][$field]);
+    }
 }

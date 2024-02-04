@@ -4,16 +4,16 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Admin;
 
 use Models\AbstractProjectModels\AbstractUserModel;
-use Models\ProjectModels\Message\User\Admin\ResultMessageModel;
 use Models\ProjectModels\DataRegistry;
 
 class UserModel extends AbstractUserModel
 {
+    private const CUSTOMER_DB_TABLE = 'admins';
     private string $adminPass;
 
     public function __construct()
     {
-        parent::__construct(new ResultMessageModel());
+        parent::__construct();
         $this->adminPass = DataRegistry::getInstance()->get('config')->getAdminPass();
     }
 
@@ -53,10 +53,15 @@ class UserModel extends AbstractUserModel
             return false;
         }
 
-        if (!password_verify($adminPass, $this->adminPass)) {
-            $this->msgModel->setMsg($this->msgModel->getMessage('login', 'admin_pass'));
+        if ($adminPass !== null) {
+            if (!password_verify($adminPass, $this->adminPass)) {
+                $this->msgModel->setMsg(
+                    $this->msgModel->getMessage('failure', 'admin_pass'),
+                    'admin_pass'
+                );
 
-            return false;
+                return false;
+            }
         }
 
         return true;
@@ -64,25 +69,25 @@ class UserModel extends AbstractUserModel
 
     public function logout(): void
     {
-        $this->logger->log(
+        $this->getLogger()->log(
             'activity',
-            'Админ : ' .
-            $this->sessionInfo->getUser()['login'] .
-            " ({$this->sessionInfo->getUser()['name']}) " .
-            'вышел.'
+            'Админ : ' . $this->sessionInfo->getUser()['login'] .
+            " ({$this->sessionInfo->getUser()['name']}) " . 'вышел.'
         );
         parent::logout();
     }
 
     protected function setSessionData(array $userData): void
     {
-        $this->logger->log(
+        $this->getLogger()->log(
             'activity',
-            'Админ : ' .
-            $userData['login'] .
-            " ({$userData['name']}) " .
-            'вошел.'
+            'Админ : ' . $userData['login'] . " ({$userData['name']}) " . 'вошел.'
         );
         parent::setSessionData($userData);
+    }
+
+    protected function getCustomerTable(): string
+    {
+        return self::CUSTOMER_DB_TABLE;
     }
 }

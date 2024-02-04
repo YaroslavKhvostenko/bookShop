@@ -4,12 +4,10 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Interfaces\IDataManagement;
-use Models\ProjectModels\Logger;
 use Models\ProjectModels\DataRegistry;
+use Models\ProjectModels\Logger;
 use Models\ProjectModels\Server;
 use Models\ProjectModels\Session;
-use Models\ProjectModels\Post;
-use Models\ProjectModels\File;
 use Models\ProjectModels\Config;
 
 class FrontController
@@ -17,17 +15,16 @@ class FrontController
     protected string $controller;
     protected string $action;
     protected ?array $params = null;
+    private ?Logger $logger = null;
     private IDataManagement $serverInfo;
-    public Logger $logger;
 
     public function __construct()
     {
-        $this->logger = new Logger();
         try {
             $this->registerData();
             $this->serverInfo = DataRegistry::getInstance()->get('server');
         } catch (\Exception $exception) {
-            $this->logger->log('default', $exception->getMessage() . $exception->getTraceAsString());
+            $this->catchException($exception);
         }
     }
 
@@ -54,11 +51,7 @@ class FrontController
             $action = $reflector->getMethod($this->action);
             $action->invoke($controller, $this->params);
         } catch (\ReflectionException $reflectionException) {
-            $this->logger->log('reflection',
-                'Creation error of ReflectionClass or ReflectionMethod.' . "\n" .
-                'Ошибка: '      . $reflectionException->getMessage() . "\n" .
-                'Файл: '      . $reflectionException->getFile() . "\n" .
-                'Строка: '    . $reflectionException->getLine());
+            $this->catchException($reflectionException, 'Creation error of ReflectionClass or ReflectionMethod.');
             $this->ErrorPage404();
         }
     }
@@ -104,5 +97,19 @@ class FrontController
         http_response_code(404);
         include_once('Templates/layouts/404.phtml');
         die();
+    }
+
+    private function catchException(\Exception $exception, string $msg = null): void
+    {
+        $this->getLogger()->logException($exception, $msg);
+    }
+
+    private function getLogger(): Logger
+    {
+        if (!$this->logger) {
+            $this->logger = Logger::getInstance();
+        }
+
+        return $this->logger;
     }
 }

@@ -5,15 +5,13 @@ namespace Controllers\ProjectControllers;
 
 use Models\ProjectModels\UserModel;
 use Views\ProjectViews\UserView;
-use Models\ProjectModels\Validation\Data\User\Validator;
-use Models\ProjectModels\Message\User\ResultMessageModel;
 use Controllers\AbstractControllers\AbstractUserController;
 
 class UserController extends AbstractUserController
 {
     public function __construct()
     {
-        parent::__construct(new UserModel(), new UserView(), new Validator(), new ResultMessageModel());
+        parent::__construct(new UserModel(), new UserView());
     }
 
     protected function redirectHome(): void
@@ -35,5 +33,10 @@ class UserController extends AbstractUserController
         } else {
             $this->redirect('admin/');
         }
+    }
+
+    protected function validateRequester(): bool
+    {
+        return $this->userModel->isAdmin();
     }
 }

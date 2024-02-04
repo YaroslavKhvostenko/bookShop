@@ -22,10 +22,9 @@ abstract class AbstractIndexController extends AbstractBaseController
         if ($this->validateRequest()) {
             $this->prepareRedirect();
         } else {
+            $content = 'main.phtml';
             if ($this->defaultModel->isSigned()) {
                 $content = 'user_main.phtml';
-            } else {
-                $content = 'main.phtml';
             }
         }
 
