@@ -47,16 +47,16 @@ class Manager implements IDataManagement
         }
 
         if (empty($this->serverOptions[$stringUriType])) {
-                $this->serverUriOptionsSetter($stringUriType);
+                $this->setServerUriOptions($stringUriType);
         }
     }
 
-    private function serverUriOptionsSetter(string $serverUriType): void
+    private function setServerUriOptions(string $serverUriType): void
     {
         if ($serverUriType === self::REQUEST) {
-            $result = $this->uriStringSplitter($this->getRequestUri());
+            $result = $this->splitUriString($this->getRequestUri());
         } else {
-            $result = $this->uriStringSplitter(parse_url($this->getReferer(), PHP_URL_PATH));
+            $result = $this->splitUriString(parse_url($this->getReferer(), PHP_URL_PATH));
         }
 
         $options = [];
@@ -101,9 +101,9 @@ class Manager implements IDataManagement
         return $this->serverOptions[self::REFERER][strtolower($refererOption)];
     }
 
-    private function uriStringSplitter(string $uriString): array
+    private function splitUriString(string $string): array
     {
-        return explode('/', trim($uriString, '/'));
+        return explode('/', trim($string, '/'));
     }
 
     private function lowerCase(array $data): array

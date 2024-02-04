@@ -731,11 +731,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     protected function getRefererOption(string $option): string
     {
-        if (!$this->serverInfo) {
-            $this->getServerInfo()->initializeServerUriOptions(self::REFERER);
-        }
-
-        return $this->serverInfo->getRefererOption($option);
+        return $this->getServerInfo()->getRefererOption($option);
     }
 
     /**
@@ -745,11 +741,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     protected function getRequestOption(string $option): string
     {
-        if (!$this->serverInfo) {
-            $this->getServerInfo()->initializeServerUriOptions(self::REQUEST);
-        }
-
-        return $this->serverInfo->getRequestOption($option);
+        return $this->getServerInfo()->getRequestOption($option);
     }
 
     /**
