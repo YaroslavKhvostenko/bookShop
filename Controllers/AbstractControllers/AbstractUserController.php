@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Controllers\AbstractControllers;
 
-use http\Encoding\Stream\Inflate;
 use Interfaces\IDataManagement;
 use Interfaces\User\UserDataValidatorInterface;
 use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
@@ -27,7 +26,6 @@ abstract class AbstractUserController extends AbstractBaseController
     protected const EMPTY = 'empty';
     protected const WRONG = 'wrong';
     protected const IMAGE = 'image';
-
     protected AbstractUserModel $userModel;
     protected AbstractDefaultView $userView;
     protected ?IDataManagement $serverInfo = null;
@@ -51,7 +49,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function registrationAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->userModel->getSessModel()->isLogged()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -82,7 +80,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function authorizationAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->userModel->getSessModel()->isLogged()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -113,7 +111,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function createAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->userModel->getSessModel()->isLogged()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -148,11 +146,17 @@ abstract class AbstractUserController extends AbstractBaseController
                 } else {
                     if ($this->getFileInfo()->isFileSent(self::IMAGE) &&
                         !$this->getImageValidator()->validate($this->getRefererUserType())) {
-                        $this->checkResult($this->imageValidator->getErrors(), self::WRONG, $this->getRefererAction());
+                        $this->checkResult(
+                            $this->imageValidator->getErrors(),
+                            self::WRONG,
+                            $this->getRefererAction()
+                        );
                     } else {
                         $this->userModel->setMsgModel($this->msgModel);
                         if (!$this->userModel->createUser($correctResult)) {
-                            $this->prepareRedirect($this->createRedirectString($this->getRefererController(), $this->getRefererAction()));
+                            $this->prepareRedirect(
+                                $this->createRedirectString($this->getRefererController(), $this->getRefererAction())
+                            );
                         } else {
                             $this->redirectHome();
                         }
@@ -170,7 +174,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function loginAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->userModel->getSessModel()->isLogged()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -201,7 +205,9 @@ abstract class AbstractUserController extends AbstractBaseController
             } else {
                 $this->userModel->setMsgModel($this->msgModel);
                 if (!$this->userModel->login($emptyResult)) {
-                    $this->prepareRedirect($this->createRedirectString($this->getRefererController(), $this->getRefererAction()));
+                    $this->prepareRedirect(
+                        $this->createRedirectString($this->getRefererController(), $this->getRefererAction())
+                    );
                 } else {
                     $this->redirectHome();
                 }
@@ -221,7 +227,7 @@ abstract class AbstractUserController extends AbstractBaseController
     {
         foreach ($result as $field => $value) {
             if (!$value) {
-                $this->msgModel->setMsg($this->msgModel->getMessage($messagesType, $field), $field);
+                $this->msgModel->setMsg($messagesType, $field, $field);
             }
         }
 
@@ -230,7 +236,7 @@ abstract class AbstractUserController extends AbstractBaseController
 
     public function logoutAction(): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->userModel->getSessModel()->isLogged()) {
             $this->logoutByCustomerType();
         } else {
             $this->redirectHome();
@@ -239,7 +245,7 @@ abstract class AbstractUserController extends AbstractBaseController
 
     protected function redirectHomeByCustomerType(): void
     {
-        if ($this->userModel->isAdmin()) {
+        if ($this->userModel->getSessModel()->isAdmin()) {
             $this->redirect('admin/');
         } else {
             $this->redirect();
@@ -289,7 +295,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function profileAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -326,7 +332,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function changeAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -365,7 +371,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function updateAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -505,7 +511,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function addAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -543,7 +549,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function newAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -586,7 +592,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function deleteAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -635,12 +641,13 @@ abstract class AbstractUserController extends AbstractBaseController
             switch (strtolower($uriType)) {
                 case 'request' :
                     $this->dataValidator = FactoryValidator::getValidator(
-                        $this->getRequestUserType(),
-                        $this->getRequestAction()
+                        $this->getRequestUserType(), $this->getRequestAction()
                     );
                     break;
                 case 'referer' :
-                    $this->dataValidator = FactoryValidator::getValidator($this->getRefererUserType(), $this->getRefererAction());
+                    $this->dataValidator = FactoryValidator::getValidator(
+                        $this->getRefererUserType(), $this->getRefererAction()
+                    );
                     break;
                 default :
                     throw new \Exception('Wrong URI type declaration for creation of DataValidator');
@@ -656,7 +663,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function removeAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
+        if (!$this->userModel->getSessModel()->isLogged() || $this->validateRequester()) {
             $this->redirectHome();
 
             return;
@@ -866,6 +873,14 @@ abstract class AbstractUserController extends AbstractBaseController
         return $redirectString;
     }
 
+    /**
+     * @param string $logFileType
+     * @param string $logMsg
+     * @param string|null $controller
+     * @param string|null $action
+     * @param string|null $params
+     * @throws \Exception
+     */
     protected function wrongData(
         string $logFileType,
         string $logMsg,

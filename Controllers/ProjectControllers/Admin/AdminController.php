@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Controllers\ProjectControllers\Admin;
 
-class AdminController
+use Controllers\AbstractControllers\AbstractAdminController;
+
+class AdminController //extends AbstractAdminController
 {
 
 }

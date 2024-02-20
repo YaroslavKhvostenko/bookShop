@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace Views\AbstractViews;
 
+use Models\AbstractProjectModels\Session\Message\AbstractSessionModel as MsgSessModel;
+use Models\AbstractProjectModels\Session\User\AbstractSessionModel as CustomerSessModel;
+
 abstract class AbstractUserView extends AbstractDefaultView
 {
     protected const IMAGES_ADDRESS = '/Media/images/';
@@ -193,9 +196,9 @@ abstract class AbstractUserView extends AbstractDefaultView
     ];
 
 
-    public function __construct()
+    public function __construct(MsgSessModel $msgSessModel, CustomerSessModel $userSessModel)
     {
-        parent::__construct();
+        parent::__construct($msgSessModel, $userSessModel);
     }
 
     /**
@@ -297,10 +300,10 @@ abstract class AbstractUserView extends AbstractDefaultView
         return $href;
     }
 
-    protected function getgetRequestController(): string
-    {
-        return '/' . $this->getRequestController() . '/';
-    }
+//    protected function getRequestController(): string
+//    {
+//        return '/' . parent::getRequestController() . '/';
+//    }
 
     public function changesOfUserProfileItems(string $field, $value = null): string
     {
@@ -377,7 +380,12 @@ abstract class AbstractUserView extends AbstractDefaultView
             throw new \Exception('Unknown Action name : ' . "'$actionName'" . ', to create URI string!');
         }
 
-        return $this->getgetRequestController() . $this->actions[$type][$actionName]['uri'] . '/' . $fieldName;
+        $controllerName = '/' . $controllerName . '/';
+        if ($this->getRequestUserType() === 'admin') {
+            $controllerName = '/' . $this->getRequestUserType() . $controllerName;
+        }
+
+        return $controllerName . $this->actions[$type][$actionName]['uri'] . '/' . $fieldName;
     }
 
     protected function validateController(string $controllerName): bool

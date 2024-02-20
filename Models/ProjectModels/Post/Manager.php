@@ -25,10 +25,6 @@ class Manager implements IDataManagement
      */
     public function getData(): array
     {
-        if (empty($this->data)) {
-            throw new \Exception('Массив $_POST пустой!');
-        }
-
         return $this->data;
     }
 }

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Views\AbstractViews;
 
+use Models\AbstractProjectModels\Session\Message\AbstractSessionModel as MsgSessModel;
+use Models\AbstractProjectModels\Session\User\AbstractSessionModel as CustomerSessModel;
 use Models\ProjectModels\DataRegistry;
 use Interfaces\IDataManagement;
 
@@ -11,11 +13,15 @@ abstract class AbstractDefaultView
     protected const LAYOUTS_PATH = 'layouts/';
     protected IDataManagement $sessionInfo;
     protected IDataManagement $serverInfo;
+    protected MsgSessModel $msgSessModel;
+    protected CustomerSessModel $userSessModel;
 
-    public function __construct()
+    public function __construct(MsgSessModel $msgSessModel, CustomerSessModel $userSessModel)
     {
-        $this->sessionInfo = DataRegistry::getInstance()->get('session');
+//        $this->sessionInfo = DataRegistry::getInstance()->get('session');
         $this->serverInfo = DataRegistry::getInstance()->get('server');
+        $this->msgSessModel = $msgSessModel;
+        $this->userSessModel = $userSessModel;
     }
 
     public function render(array $options): void
@@ -27,23 +33,37 @@ abstract class AbstractDefaultView
     {
         $options['content'] = $this->getContentPath() . $content;
         $options['title'] = $title;
-        $options['header'] = $this->getPath() . 'header.phtml';
+        $options['header'] = $this->getPath() . 'factory_header.phtml';
         $options['messages'] = $this->getPath() . 'messages.phtml';
         $options['footer'] = $this->getPath() . 'footer.phtml';
-        $options['user'] = $this->sessionInfo->getUser();
+        $options['user'] = $this->userSessModel->getUserData();
         $options['data'] = $data;
-        $options['resultMsg'] = $this->sessionInfo->getAllMessages();
+        $options['resultMsg'] = $this->msgSessModel->getMessages();
         return $options;
     }
 
     public function getHeaderContent(): void
     {
-        if ($this->sessionInfo->getUser()) {
-            include_once $this->getContentPath() . 'user_logged_header.phtml';
+        if ($this->userSessModel->getUserData()) {
+            if ($this->userSessModel->isAdmin()) {
+                if ($this->userSessModel->isHeadAdmin()) {
+                    include_once $this->getHeaderPath() . 'admin_header.phtml';
+                } else {
+                    include_once $this->getHeaderPath() . 'admin_header.phtml';
+                }
+            } else {
+                include_once $this->getHeaderPath() . 'user_header.phtml';
+            }
         } else {
-            include_once $this->getContentPath() . 'user_header.phtml';
+            include_once $this->getHeaderPath() . 'header.phtml';
         }
     }
+
+    protected function getHeaderPath(): string
+    {
+        return $this->getPath();
+    }
+
 
     protected function getPath(): string
     {
@@ -52,7 +72,7 @@ abstract class AbstractDefaultView
 
     protected function getRequestUserType(): string
     {
-        return $this->serverInfo->getRequestOption('customer');
+        return $this->serverInfo->getRequestOption('user_type');
     }
 
     protected function getRequestController(): string

@@ -27,7 +27,7 @@ class UserController extends AbstractUserController
 
     protected function logoutByCustomerType(): void
     {
-        if (!$this->userModel->isAdmin()) {
+        if (!$this->userModel->getSessModel()->isAdmin()) {
             $this->userModel->logout();
             $this->redirectHome();
         } else {
@@ -37,6 +37,6 @@ class UserController extends AbstractUserController
 
     protected function validateRequester(): bool
     {
-        return $this->userModel->isAdmin();
+        return $this->userModel->getSessModel()->isAdmin();
     }
 }

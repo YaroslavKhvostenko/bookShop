@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Views\ProjectViews\Admin;
 
 use Views\AbstractViews\AbstractUserView;
+use Models\ProjectModels\Session\Message\SessionModel as MsgSessModel;
+use Models\ProjectModels\Session\User\Admin\SessionModel as AdminSessModel;
 
 class UserView extends AbstractUserView
 {
@@ -16,7 +18,7 @@ class UserView extends AbstractUserView
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct(MsgSessModel::getInstance(), AdminSessModel::getInstance());
         $this->profileItems['required'] = array_merge(
             $this->profileItems['required'], self::REQUIRED_PROFILE_ITEMS
         );
@@ -27,10 +29,20 @@ class UserView extends AbstractUserView
         return parent::getAvatarAddress() . self::AVATAR_ADDRESS . $avatarTitle;
     }
 
-    protected function getRequestController(): string
+    protected function getHeaderPath(): string
     {
-        return '/' . $this->getRequestUserType() . parent::getRequestController();
+        $headerPath = parent::getHeaderPath() . $this->getAdminPath();
+        if ($this->userSessModel->isHeadAdmin()) {
+            $headerPath .= 'head/';
+        }
+
+        return $headerPath;
     }
+
+//    protected function getRequestController(): string
+//    {
+//        return '/' . $this->getRequestUserType() . parent::getRequestController();
+//    }
 
     protected function getContentPath(): string
     {

@@ -21,6 +21,6 @@ class IndexController extends AbstractIndexController
 
     protected function validateRequest(): bool
     {
-        return $this->defaultModel->isSigned() && $this->defaultModel->isAdmin();
+        return $this->defaultModel->getSessModel()->isLogged() && $this->defaultModel->getSessModel()->isAdmin();
     }
 }

@@ -4,16 +4,8 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Message\User;
 
 use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
-use Models\ProjectModels\Message\User\Add\MsgModel as UserAddProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Admin\Add\MsgModel as AdminAddProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Admin\Authorization\MsgModel as AdminAuthorizationMsgModel;
-use Models\ProjectModels\Message\User\Admin\Change\MsgModel as AdminChangeProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Admin\Registration\MsgModel as AdminRegisterMsgModel;
-use Models\ProjectModels\Message\User\Admin\Remove\MsgModel as AdminRemoveProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Authorization\MsgModel as UserAuthorizationMsgModel;
-use Models\ProjectModels\Message\User\Change\MsgModel as UserChangeProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Registration\MsgModel as UserRegisterMsgModel;
-use Models\ProjectModels\Message\User\Remove\MsgModel as UserRemoveProfileItemMsgModel;
+use Models\ProjectModels\Message\User;
+use Models\ProjectModels\Message\User\Admin;
 //use mysql_xdevapi\Exception;
 
 class MsgModelsFactory
@@ -29,15 +21,15 @@ class MsgModelsFactory
         if (strtolower($userType) === 'user') {
             switch (strtolower($actionType)) {
                 case 'registration' :
-                    return new UserRegisterMsgModel();
+                    return new User\Registration\MsgModel();
                 case 'authorization' :
-                    return new UserAuthorizationMsgModel();
+                    return new User\Authorization\MsgModel();
                 case 'add' :
-                    return new UserAddProfileItemMsgModel();
+                    return new User\Add\MsgModel();
                 case 'change' :
-                    return new UserChangeProfileItemMsgModel();
+                    return new User\Change\MsgModel();
                 case 'remove' :
-                    return new UserRemoveProfileItemMsgModel();
+                    return new User\Remove\MsgModel();
                 default :
                     throw new \Exception(
                         "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
@@ -46,15 +38,15 @@ class MsgModelsFactory
         } elseif (strtolower($userType) === 'admin') {
             switch (strtolower($actionType)) {
                 case 'registration' :
-                    return new AdminRegisterMsgModel();
+                    return new Admin\Registration\MsgModel();
                 case 'authorization' :
-                    return new AdminAuthorizationMsgModel();
+                    return new Admin\Authorization\MsgModel();
                 case 'add' :
-                    return new AdminAddProfileItemMsgModel();
+                    return new Admin\Add\MsgModel();
                 case 'change' :
-                    return new AdminChangeProfileItemMsgModel();
+                    return new Admin\Change\MsgModel();
                 case 'remove' :
-                    return new AdminRemoveProfileItemMsgModel();
+                    return new Admin\Remove\MsgModel();
                 default :
                     throw new \Exception(
                     "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"

@@ -7,8 +7,5 @@ use Models\AbstractProjectModels\Message\User\Registration\AbstractMsgModel;
 
 class MsgModel extends AbstractMsgModel
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
+
 }

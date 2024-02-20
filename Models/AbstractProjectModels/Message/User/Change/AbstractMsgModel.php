@@ -120,7 +120,6 @@ abstract class AbstractMsgModel extends AbstractBaseMsgModel
 
     public function __construct()
     {
-        parent::__construct();
         $this->messages[self::EMPTY] = self::EMPTY_DATA;
         $this->messages[self::WRONG] = self::WRONG_DATA;
         $this->messages[self::SUCCESS_RESULT] = self::SUCCESS_MSGS;

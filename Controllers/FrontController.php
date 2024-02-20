@@ -59,14 +59,27 @@ class FrontController
     public function start(): void
     {
         $splits = explode('/', trim($this->getRequest(), '/'));
-        if (ucfirst($splits[0]) == 'Admin') {
-            $this->controller = !empty($splits[1]) ?
-                $this->getFullControllerName('Admin\\' . ucfirst($splits[1]) . 'Controller')
-                : $this->getFullControllerName('Admin\\IndexController');
-            $this->action = !empty($splits[2]) ? $splits[2] . 'Action' : 'indexAction';
-            if (!empty($splits[3])) {
-                for ($i = 3, $count = count($splits); $i < $count; $i++) {
-                    $this->params[] = $splits[$i];
+
+        if (ucfirst($splits[0]) === 'Admin') {
+            if (!empty($splits[1]) && ucfirst($splits[1]) === 'Head') {
+                $this->controller = !empty($splits[2]) ?
+                    $this->getFullControllerName('Admin\\Head\\' . ucfirst($splits[2]) . 'Controller')
+                    : $this->getFullControllerName('Admin\\Head\\IndexController');
+                $this->action = !empty($splits[3]) ? $splits[3] . 'Action' : 'indexAction';
+                if (!empty($splits[4])) {
+                    for ($i = 4, $count = count($splits); $i < $count; $i++) {
+                        $this->params[] = $splits[$i];
+                    }
+                }
+            } else {
+                $this->controller = !empty($splits[1]) ?
+                    $this->getFullControllerName('Admin\\' . ucfirst($splits[1]) . 'Controller')
+                    : $this->getFullControllerName('Admin\\IndexController');
+                $this->action = !empty($splits[2]) ? $splits[2] . 'Action' : 'indexAction';
+                if (!empty($splits[3])) {
+                    for ($i = 3, $count = count($splits); $i < $count; $i++) {
+                        $this->params[] = $splits[$i];
+                    }
                 }
             }
         } else {

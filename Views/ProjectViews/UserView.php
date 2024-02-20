@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Views\ProjectViews;
 
 use Views\AbstractViews\AbstractUserView;
+use Models\ProjectModels\Session\Message\SessionModel as MsgSessModel;
+use Models\ProjectModels\Session\User\SessionModel as UserSessModel;
 
 class UserView extends AbstractUserView
 {
@@ -23,7 +25,7 @@ class UserView extends AbstractUserView
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct(MsgSessModel::getInstance(), UserSessModel::getInstance());
         $this->formOptions['add']['phone'] = $this->formOptions['change']['phone'];
         $this->formOptions['add']['address'] = $this->formOptions['change']['address'];
         $this->formLabels['add'] = array_merge($this->formLabels['add'], self::ADD_LABELS);

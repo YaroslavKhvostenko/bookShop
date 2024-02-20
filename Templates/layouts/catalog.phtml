@@ -1,0 +1,63 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\CatalogView
+ */
+?>
+
+<div class="sidebar">
+    <?php if (!empty($options['user'])): ?>
+        <?php include_once 'catalog_sidebar.phtml'?>
+    <?php endif; ?>
+</div>
+<?php if ($options['data'] !== null): ?>
+    <table border="1" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th>№</th>
+            <th>Картинка</th>
+            <th>Название</th>
+            <th>Автор</th>
+            <th>Жанр</th>
+            <th>Дата публикации</th>
+            <th>Оценка среди пользователей сайта</th>
+            <th>Стоимость</th>
+            <th>Наличие</th>
+        </tr>
+        <?php
+        $i = 1;
+        foreach ($options['data'] as $book):
+            ?>
+            <tr>
+                <td><?= $i++ ?></td>
+                <td>
+                    <a href="/book/details/<?= $book['book_id'] ?>">
+                        <img src="/Media/images/books_logos/<?= $book['book_image'] ?>" alt="avatar" width="100px" height="100px">
+                    </a>
+                </td>
+                <td><a href="/book/details/<?= $book['book_id'] ?>"><?= $book['book_title'] ?></a></td>
+                <td><?= $book['book_author'] ?></td>
+                <td><?= $book['book_genre'] ?></td>
+                <td><?= $this->getPubDate($book['book_pub_date']) ?></td>
+                <td>
+                    <?php if (!is_null($book['book_rating'])): ?>
+                        <?= $book['book_rating'] ?>
+                    <?php else: ?>
+                        Оценок еще нет
+                    <?php endif;?>
+                </td>
+                <td>
+                    <?= $book['book_price'] ?> грн.
+                </td>
+                <td>
+                    <?php if ((int)$book['book_quantity'] <= 3): ?>
+                        Поспешите, осталось всего <?= $book['book_quantity'] ?> шт.!
+                    <?php elseif((int)$book['book_quantity'] === 0): ?>
+                        Извините товар закончился. Пополним в ближайшее время
+                    <?php else: ?>
+                        В наличии
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php  endforeach; ?>
+    </table>
+<?php endif; ?>

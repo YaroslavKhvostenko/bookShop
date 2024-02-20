@@ -12,14 +12,23 @@ class Manager implements IDataManagement
     private const REQUEST = 'request';
     private const REFERER = 'referer';
     private const USER_TYPE = 'user_type';
+    private const ADMIN_TYPE = 'admin_type';
     private const CONTROLLER = 'controller';
     private const ACTION = 'action';
-    private const ADMIN = 'admin';
     private const USER = 'user';
+    private const ADMIN = 'admin';
+    private const HEAD = 'head';
     private array $serverOptions = [
         self::REQUEST => [],
         self::REFERER => []
     ];
+    private const REQUEST_OPTIONS = [
+        self::USER_TYPE => self::USER_TYPE,
+        self::CONTROLLER => self::CONTROLLER,
+        self::ACTION => self::ACTION,
+        self::ADMIN_TYPE => self::ADMIN_TYPE
+    ];
+    private const REFERER_OPTIONS = self::REQUEST_OPTIONS;
 
     public function __construct()
     {
@@ -60,14 +69,38 @@ class Manager implements IDataManagement
         }
 
         $options = [];
+        if (!isset($result[0])) {
+            return;
+        }
+
         if (strtolower($result[0]) === self::ADMIN) {
-            $options[self::USER_TYPE] = $result[0];
-            $options[self::CONTROLLER] = $result[1];
-            $options[self::ACTION] = $result[2];
+            if (strtolower($result[1]) === self::HEAD) {
+                $options[self::USER_TYPE] = $result[0];
+                $options[self::ADMIN_TYPE] = $result[1] . '_' . self::ADMIN;
+                if (isset($result[2])) {
+                    $options[self::CONTROLLER] = $result[2];
+                }
+
+                if (isset($result[3])) {
+                    $options[self::ACTION] = $result[3];
+                }
+            } else {
+                $options[self::USER_TYPE] = $result[0];
+                $options[self::ADMIN_TYPE] = $result[0];
+                if (isset($result[1])) {
+                    $options[self::CONTROLLER] = $result[1];
+                }
+
+                if (isset($result[2])) {
+                    $options[self::ACTION] = $result[2];
+                }
+            }
         } else {
             $options[self::USER_TYPE] = self::USER;
             $options[self::CONTROLLER] = $result[0];
-            $options[self::ACTION] = $result[1];
+            if (isset($result[1])) {
+                $options[self::ACTION] = $result[1];
+            }
         }
 
         $this->serverOptions[$serverUriType] = $this->lowerCase($options);
@@ -80,6 +113,11 @@ class Manager implements IDataManagement
      */
     public function getRequestOption(string $requestOption): string
     {
+        if (!array_key_exists($requestOption, self::REQUEST_OPTIONS) ||
+            !array_key_exists($requestOption, self::REFERER_OPTIONS)) {
+            throw new \Exception('Wrong name of server option: ' . "'$requestOption'!");
+        }
+
         if (!array_key_exists($requestOption, $this->serverOptions[self::REQUEST])) {
             $this->initializeServerUriOptions(self::REQUEST);
         }

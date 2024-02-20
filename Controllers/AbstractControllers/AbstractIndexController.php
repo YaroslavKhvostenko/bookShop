@@ -23,7 +23,7 @@ abstract class AbstractIndexController extends AbstractBaseController
             $this->prepareRedirect();
         } else {
             $content = 'main.phtml';
-            if ($this->defaultModel->isSigned()) {
+            if ($this->defaultModel->getSessModel()->isLogged()) {
                 $content = 'user_main.phtml';
             }
         }
