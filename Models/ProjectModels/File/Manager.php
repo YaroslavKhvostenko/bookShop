@@ -13,11 +13,15 @@ class Manager implements IDataManagement
     private const IMAGE_TYPE = 'image';
     private const TEXT_FILE_TYPE = 'text_file';
     private const USER = 'user';
+    private const GUEST = 'guest';
     private const ADMIN = 'admin';
+    private const GUEST_ADMIN = 'guest_admin';
     private const BOOK = 'book';
     private array $data;
     private const FILE_FOLDER = [
         self::USER => 'users/',
+        self::GUEST => 'users/',
+        self::GUEST_ADMIN => 'admin_users/',
         self::ADMIN => 'admin_users/',
         self::BOOK => 'books_logos/'
     ];

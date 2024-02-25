@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace Models\AbstractProjectModels\Message;
 
-use Interfaces\IDataManagement;
-use Models\ProjectModels\DataRegistry;
+use Models\AbstractProjectModels\Session\Message\AbstractSessionModel;
+use Models\ProjectModels\Session\Message\SessionModel;
 
 abstract class AbstractBaseMsgModel
 {
-    protected IDataManagement $sessionInfo;
+    protected ?AbstractSessionModel $msgSessModel = null;
     protected const USER_ESSENCE = 'user';
     protected const PROJECT = 'project';
     protected const DEFAULT = 'default';
@@ -39,18 +39,13 @@ abstract class AbstractBaseMsgModel
     private const FAILURE_MSGS = [];
     private const SUCCESS_MSGS = [];
 
-    public function __construct()
-    {
-        $this->sessionInfo = DataRegistry::getInstance()->get('session');
-    }
-
     /**
      * @param string $messagesType
      * @param string|null $msgType
      * @return string
      * @throws \Exception
      */
-    public function getMessage(string $messagesType, string $msgType = null): string
+    protected function getMessage(string $messagesType, string $msgType = null): string
     {
         if (!array_key_exists($messagesType, $this->messages)) {
             throw new \Exception('Message for \'messagesType\' - \'' . $messagesType . '\' does not exist!');
@@ -62,19 +57,38 @@ abstract class AbstractBaseMsgModel
         }
     }
 
-    public function setMsg(string $msg, string $fieldName = null): void
+    /**
+     * @param string $messagesType
+     * @param string|null $msgType
+     * @param string|null $fieldName
+     * @throws \Exception
+     */
+    public function setMessage(string $messagesType, string $msgType = null, string $fieldName = null): void
     {
-        $this->sessionInfo->setSessionMsg($msg, $fieldName);
+        $this->getSessionModel()->setMessage($this->getMessage($messagesType, $msgType), $fieldName);
     }
 
-    public function unsetMessages(): void
+    public function deleteAllMessages(): void
     {
-        $this->sessionInfo->unsetAllMessages();
+        $this->getSessionModel()->deleteAllMessages();
     }
 
+    /**
+     * @param string $errorType
+     * @throws \Exception
+     */
     public function setErrorMsg(string $errorType = self::DEFAULT): void
     {
-        $this->unsetMessages();
-        $this->setMsg($this->getMessage(self::PROJECT, $errorType), $errorType);
+        $this->deleteAllMessages();
+        $this->setMessage(self::PROJECT, $errorType, $errorType);
+    }
+
+    protected function getSessionModel(): AbstractSessionModel
+    {
+        if (!$this->msgSessModel) {
+            $this->msgSessModel = SessionModel::getInstance();
+        }
+
+        return $this->msgSessModel;
     }
 }

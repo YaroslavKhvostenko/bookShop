@@ -4,11 +4,12 @@ declare(strict_types=1);
 namespace Views\ProjectViews;
 
 use Views\AbstractViews\AbstractDefaultView;
+use Models\ProjectModels\Session\User\SessionModel;
 
 class DefaultView extends AbstractDefaultView
 {
-    protected function getContentPath(): string
+    public function __construct()
     {
-        return $this->getPath();
+        parent::__construct(SessionModel::getInstance());
     }
 }

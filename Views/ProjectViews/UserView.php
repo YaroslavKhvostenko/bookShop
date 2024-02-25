@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Views\ProjectViews;
 
 use Views\AbstractViews\AbstractUserView;
+use Models\ProjectModels\Session\User\SessionModel;
 
 class UserView extends AbstractUserView
 {
@@ -23,7 +24,7 @@ class UserView extends AbstractUserView
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct(SessionModel::getInstance());
         $this->formOptions['add']['phone'] = $this->formOptions['change']['phone'];
         $this->formOptions['add']['address'] = $this->formOptions['change']['address'];
         $this->formLabels['add'] = array_merge($this->formLabels['add'], self::ADD_LABELS);
@@ -31,15 +32,5 @@ class UserView extends AbstractUserView
         $this->profileItems['not_required'] = array_merge($this->profileItems['not_required'],
             self::NOT_REQUIRED_PROFILE_ITEMS);
 
-    }
-
-    protected function getContentPath(): string
-    {
-        return $this->getPath();
-    }
-
-    protected function getAvatarAddress(string $avatarTitle = null): string
-    {
-        return parent::getAvatarAddress() . self::AVATAR_ADDRESS . $avatarTitle;
     }
 }

@@ -3,19 +3,13 @@ declare(strict_types=1);
 
 namespace Views\ProjectViews\Admin;
 
-use Views\AbstractViews\AbstractDefaultView;
+use Views\AbstractViews\Admin\AbstractDefaultView;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class DefaultView extends AbstractDefaultView
 {
-    protected const ADMIN_LAYOUTS = 'admin/';
-
-    protected function getContentPath(): string
+    public function __construct()
     {
-        return $this->getPath() . $this->getAdminPath();
-    }
-
-    protected function getAdminPath(): string
-    {
-        return self::ADMIN_LAYOUTS;
+        parent::__construct(SessionModel::getInstance());
     }
 }

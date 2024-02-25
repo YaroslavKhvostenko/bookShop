@@ -1,0 +1,50 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\Admin\BookView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'catalog_sidebar.phtml'?>
+</div>
+<form action="/admin/book/new/book" method="post" enctype="multipart/form-data">
+    <label>Название(только кириллица и знаки пунктуации, от 10 до 50 знаков!) :</label>
+    <input name="title" type="text" />
+    <br>
+    <label>Автор :</label>
+    <select name="author_id">
+        <option value=''>Выберите Автора</option>
+        <?php if (isset($options['data']['authors'])): ?>
+            <?php foreach($options['data']['authors'] as $author): ?>
+                <option value='<?= $author['id'] ?>'> <?= $author['name'] ?> </option>
+            <?php endforeach; ?>
+        <?php endif;?>
+    </select>
+    <br>
+    <label>Жанр :</label>
+    <select name="genre_id">
+        <option value=''>Выберите Жанр</option>
+        <?php if (isset($options['data']['genres'])): ?>
+            <?php foreach($options['data']['genres'] as $author): ?>
+                <option value='<?= $author['id'] ?>'> <?= $author['title'] ?> </option>
+            <?php endforeach; ?>
+        <?php endif;?>
+    </select>
+    <br>
+    <label>Дата публикации(День.месяц.год = 01.01.2000) :</label>
+    <input name="pub_date" type="text" />
+    <br>
+    <label>Количество :</label>
+    <input name="quantity" type="text" />
+    <br>
+    <label>Цена :</label>
+    <input name="price" type="text" />
+    <br>
+    <label>Картинка книги:</label>
+    <input name="image" type="file"/>
+    <br>
+    <label>Описание(в рамках разумного=))) :</label>
+    <input name="description" type="text"/>
+    <br>
+    <button type="submit">Добавить</button>
+</form>

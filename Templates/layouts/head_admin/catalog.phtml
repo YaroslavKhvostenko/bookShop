@@ -1,0 +1,50 @@
+<?php
+/**
+ * @var $options array
+ * * @var $this Views\ProjectViews\HeadAdmin\CatalogView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'catalog_sidebar.phtml'?>
+</div>
+<?php if ($options['data'] !== null): ?>
+    <table border="1" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th>№</th>
+            <th>Картинка</th>
+            <th>Название</th>
+            <th>Автор</th>
+            <th>Жанр</th>
+            <th>Дата публикации</th>
+            <th>Оценка среди пользователей сайта</th>
+            <th>Стоимость</th>
+            <th>Наличие</th>
+            <th>Краткое описание</th>
+        </tr>
+        <?php
+        $i = 1;
+        foreach ($options['data'] as $book):
+            ?>
+            <tr>
+                <td><?= $i++ ?></td>
+                <td>
+                    <img src="/Media/images/books_logos/<?= $book['book_image'] ?>" alt="avatar" width="100px" height="100px">
+                </td>
+                <td><?= $book['book_title'] ?></td>
+                <td><?= $book['book_author'] ?></td>
+                <td><?= $book['book_genre'] ?></td>
+                <td><?= $this->getPubDate($book['book_pub_date']) ?></td>
+                <td>
+                    <?php if (!is_null($book['book_rating'])): ?>
+                        <?= $book['book_rating'] ?>
+                    <?php else: ?>
+                        Оценок еще нет
+                    <?php endif;?>
+                </td>
+                <td><?= $book['book_price'] ?> грн.</td>
+                <td><?= $book['book_quantity'] ?> шт.</td>
+                <td><?= $book['book_description'] ?> </td>
+            </tr>
+        <?php  endforeach; ?>
+    </table>
+<?php endif; ?>

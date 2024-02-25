@@ -5,34 +5,26 @@ namespace Models\AbstractProjectModels;
 
 use Interfaces\IDataManagement;
 use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
+use Models\AbstractProjectModels\Session\User\AbstractSessionModel;
 use Models\ProjectModels\DataRegistry;
-use Models\ProjectModels\File;
 use Models\ProjectModels\Logger;
 
 abstract class AbstractDefaultModel
 {
-    protected IDataManagement $sessionInfo;
     protected ?IDataManagement $fileInfo = null;
     protected ?AbstractBaseMsgModel $msgModel = null;
     protected ?Logger $logger = null;
+    protected IDataManagement $serverInfo;
+    protected AbstractSessionModel $sessionModel;
 
     /**
      * AbstractDefaultModel constructor.
      * @throws \Exception
      */
-    public function __construct()
+    public function __construct(AbstractSessionModel $sessionModel)
     {
-        $this->sessionInfo = DataRegistry::getInstance()->get('session');
-    }
-
-    public function isSigned(): bool
-    {
-        return $this->sessionInfo->isLogged();
-    }
-
-    public function isAdmin(): bool
-    {
-        return isset($this->sessionInfo->getUser()['is_admin']);
+        $this->sessionModel = $sessionModel;
+        $this->serverInfo = DataRegistry::getInstance()->get('server');
     }
 
     /**
@@ -55,7 +47,13 @@ abstract class AbstractDefaultModel
      */
     public function moveUploadFile(string $fileType, string $folder, string $fileName): bool
     {
-        return $this->getFileInfo()->moveUploadFile($fileType, $folder, $fileName);
+        try {
+            return $this->getFileInfo()->moveUploadFile($fileType, $folder, $fileName);
+        } catch (\Exception $exception) {
+            $this->catchException($exception);
+        }
+
+        return false;
     }
 
     /**
@@ -93,7 +91,7 @@ abstract class AbstractDefaultModel
         return $this->fileInfo;
     }
 
-    public function setMsgModel(AbstractBaseMsgModel $msgModel): void
+    public function setMessageModel(AbstractBaseMsgModel $msgModel): void
     {
         if (!$this->msgModel) {
             $this->msgModel = $msgModel;

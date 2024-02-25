@@ -10,8 +10,12 @@ use Models\ProjectModels\DataRegistry;
 
 class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
 {
-    protected IDataManagement $config;
+    private IDataManagement $config;
     private \PDO $pdo;
+    private static MySqlDbWorkModel $selfInstance;
+    private ?string $sql = null;
+    private string $methodsPath = 'Class : MySqlDbWorkModel(). Methods : ';
+    private $stmt;
 
     /**
      * Set connecting params and connect with database
@@ -19,7 +23,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
      * @throws \PDOException
      * @throws \Exception
      */
-    public function __construct()
+    private function __construct()
     {
         $this->config = DataRegistry::getInstance()->get('config');
         $db_params = $this->config->getDBdata();
@@ -39,59 +43,241 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         }
     }
 
-    /**
-     * Select data from database
-     * @param string $tableName
-     * @param array $requestFields
-     * @param string|null $conditionData
-     * @return array|false
-     */
-    public function selectData(string $tableName, array $requestFields, array $conditionData = null)
+    private function __clone()
     {
-        $sql = 'SELECT ';
+    }
+
+    private function __wakeup()
+    {
+    }
+
+    public static function getInstance(): MySqlDbWorkModel
+    {
+        if (!isset(self::$selfInstance)) {
+            self::$selfInstance = new self;
+        }
+
+        return self::$selfInstance;
+    }
+
+    public function select(array $requestFields): self
+    {
+        $this->methodsPath = 'select()';
+        $this->sql = 'SELECT ';
         $i = 1;
         $count = count($requestFields);
-        foreach ($requestFields as $field) {
-            if ($i === $count) {
-                $sql .= "`{$field}` ";
+        foreach ($requestFields as $field => $value) {
+            if (!is_numeric($field)) {
+                if ($i === $count) {
+                    $this->sql .= "`{$field}` AS `{$value}`";
+                } else {
+                    $this->sql .= "`{$field}` AS `{$value}`, ";
+                }
             } else {
-                $sql .= "`{$field}`, ";
+                if ($i === $count) {
+                    $this->sql .= "`{$value}`";
+                } else {
+                    $this->sql .= "`{$value}`, ";
+                }
             }
+
             $i++;
         }
-        $sql .= "FROM `{$tableName}`";
-        if (isset($conditionData)) {
-            $i = 1;
-            $condition = ' WHERE ';
-            foreach ($conditionData as $field => $value) {
-                if (!is_string($value) && !is_int($value)) {
-                    throw new \Exception('Wrong data type!');
-                }
 
-                if ($i === 1) {
-                    $condition .= "`{$field}` = " . $this->pdo->quote($value);
-                } else {
-                    $condition .= " OR `{$field}` = " . $this->pdo->quote($value);
-                }
-                $i++;
+        return self::$selfInstance;
+    }
+
+    public function from(
+        array $requestTables,
+        array $joinTables = null,
+        array $joinConditions = null,
+        array $joinTypes = null
+    ): self {
+        $this->methodsPath .= '->from()';
+        $this->sql .= ' FROM ';
+        $i = 1;
+        $count = count($requestTables);
+        foreach ($requestTables as $requestTable) {
+            if ($i === $count) {
+                $this->sql .= "`{$requestTable}`";
+            } else {
+                $this->sql .= "`{$requestTable}`, ";
             }
-            $sql .= $condition;
-        }
-        try {
-            $result = $this->pdo->query($sql);
 
-            return $result->fetchAll();
+            $i++;
+        }
+
+        if ($joinTables !== null) {
+            foreach ($joinTables as $joinTable) {
+                $joinType = array_shift($joinTypes);
+                $requestField = array_key_first($joinConditions);
+                $joinField = array_shift($joinConditions);
+                $this->sql .= " {$joinType} `{$joinTable}` ON `{$requestField}` = `{$joinField}`";
+            }
+        }
+
+        return self::$selfInstance;
+    }
+
+    /**
+     * @param array $conditionData
+     * @param array|null $andOr
+     * @return $this
+     * @throws \Exception
+     */
+    public function condition(array $conditionData, array $andOr = null): self
+    {
+        $this->methodsPath .= '->condition()';
+        $globalCounter = 1;
+        $globalCount = count($conditionData);
+        $this->sql .= ' WHERE ';
+        foreach ($conditionData as $field => $data) {
+            $this->sql .= "`{$field}` ";
+            $conditionOperator = null;
+            if (!is_null($andOr)) {
+                $conditionOperator = array_shift($andOr);
+            }
+
+            if (is_array($data)) {
+                $arrayDataCounter = 1;
+                $countDataArray = count($data);
+                $this->sql .= "IN (";
+                foreach ($data as $value) {
+                    $value = $this->handleData($value);
+                    if ($arrayDataCounter === $countDataArray) {
+                        $this->sql .= "{$value}) ";
+                        if (!is_null($conditionOperator)) {
+                            $this->sql .= $conditionOperator . ' ';
+                        }
+                    } else {
+                        $this->sql .= "{$value}, ";
+                    }
+                    $arrayDataCounter++;
+                }
+            } else {
+                if (!is_null($data)) {
+                    $data = $this->handleData($data);
+                }  else {
+                    $data = 'NULL';
+                }
+
+                $operator = $data === 'NULL' ? 'IS' : '=';
+                if ($globalCounter === $globalCount) {
+                    $this->sql .= "{$operator} {$data}";
+                } else {
+                    $this->sql .= "{$operator} {$data} ";
+                    if (!is_null($conditionOperator)) {
+                        $this->sql .= $conditionOperator . ' ';
+                    }
+                }
+            }
+
+            $globalCounter++;
+        }
+
+
+        return self::$selfInstance;
+    }
+
+    /**
+     * @param null $data
+     * @return false|int|string
+     * @throws \Exception
+     */
+    private function handleData($data)
+    {
+        $this->methodsPath .= '->handleData()';
+        if (is_numeric($data)) {
+            $data = (int)$data;
+        } elseif (is_string($data)) {
+            $data = $this->pdo->quote($data);
+        } else {
+            throw new \Exception('Wrong data type in ' . "$this->methodsPath!");
+        }
+
+        return $data;
+    }
+
+    public function orderBy(string $orderField, string $orderType): self
+    {
+        $this->methodsPath .= '->orderBy()';
+        $this->sql .= ' ORDER BY ' . $orderField . ' ' . $orderType;
+
+        return self::$selfInstance;
+    }
+
+    /**
+     * @return $this
+     * @throws \Exception
+     */
+    public function query(): self
+    {
+        $this->methodsPath .= '->query()';
+        try {
+            $this->stmt = $this->pdo->query($this->sql);
+            return self::$selfInstance;
         } catch (\PDOException $PDOException) {
             $this->catchException(
                 $PDOException,
                 'Error selecting data from DB.' . "\n" .
+                'Check : ' .$this->methodsPath . ' !!!' . "\n" .
                 "Error: "      . $PDOException->getMessage() . "\n" .
                 'File: '      . $PDOException->getFile() . "\n" .
                 'Line: '    . $PDOException->getLine()
             );
         }
 
-        return false;
+        return self::$selfInstance;
+    }
+
+    /**
+     * @return mixed|\PDOStatement
+     * @throws \Exception
+     */
+    public function fetch()
+    {
+        $this->methodsPath .= '->fetch()';
+        try {
+            if ($this->stmt instanceof \PDOStatement) {
+                return $this->stmt->fetch();
+            }
+        } catch (\PDOException $PDOException) {
+            $this->catchException(
+                $PDOException,
+                'Error selecting data from DB.' . "\n" .
+                'Check : ' .$this->methodsPath . ' !!!' . "\n" .
+                "Error: "      . $PDOException->getMessage() . "\n" .
+                'File: '      . $PDOException->getFile() . "\n" .
+                'Line: '    . $PDOException->getLine()
+            );
+        }
+
+        return $this->stmt;
+    }
+
+    /**
+     * @return array|\PDOStatement
+     * @throws \Exception
+     */
+    public function fetchAll()
+    {
+        $this->methodsPath .= '->fetch()';
+        try {
+            if ($this->stmt instanceof \PDOStatement) {
+                return $this->stmt->fetchAll();
+            }
+        } catch (\PDOException $PDOException) {
+            $this->catchException(
+                $PDOException,
+                'Error selecting data from DB.' . "\n" .
+                'Check : ' .$this->methodsPath . ' !!!' . "\n" .
+                "Error: "      . $PDOException->getMessage() . "\n" .
+                'File: '      . $PDOException->getFile() . "\n" .
+                'Line: '    . $PDOException->getLine()
+            );
+        }
+
+        return $this->stmt;
     }
 
     /**
@@ -102,7 +288,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
      */
     public function insertData(string $tableName, array $data): bool
     {
-        $insert = "INSERT INTO `{$tableName}` (";
+        $insert = 'INSERT INTO ' . "`{$tableName}` (";
         $values = 'VALUES (';
         $i = 1;
         $count = count($data);
@@ -138,48 +324,67 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
     }
 
     /**
-     * @param string $tableName
+     * @param array $updateTables
      * @param array $updateData
-     * @param array $conditionData
-     * @return false|int
+     * @return $this
      * @throws \Exception
      */
-    public function updateData(string $tableName, array $updateData, array $conditionData)
+    public function update(array $updateTables, array $updateData): self
     {
-        $sql = "UPDATE `{$tableName}` SET ";
+        $this->methodsPath .= 'update()';
+        $this->sql = 'UPDATE ';
         $i = 1;
-        $count = count($updateData);
-        foreach ($updateData as $key => $value) {
+        $count = count($updateTables);
+        foreach ($updateTables as $updateTable) {
             if ($i === $count) {
-                if ($value !== null) {
-                    $sql .= "`{$key}`={$this->pdo->quote("$value")} ";
-                } else {
-                    $sql .= "`{$key}`=NULL ";
-                }
+                $this->sql .= "`{$updateTable}` ";
             } else {
-                if ($value !== null) {
-                    $sql .= "`{$key}`={$this->pdo->quote("$value")}, ";
-                } else {
-                    $sql .= "`{$key}`=NULL, ";
-                }
+                $this->sql .= "`{$updateTable}`, ";
             }
-            $i++;
-        }
-        $i = 1;
-        $count = count($conditionData);
-        $condition = 'WHERE ';
-        foreach ($conditionData as $field => $value) {
-            if ($count === $i) {
-                $condition .= $field . ' IN ' . '(' . "'{$value}'" . ')';
-            }
+
             $i++;
         }
 
-        $sql .= $condition;
-        try {
-            return $this->pdo->exec($sql);
+        $this->sql .= 'SET ';
+        $i = 1;
+        $count = count($updateData);
+        foreach ($updateData as $key => $value) {
+            if (is_numeric($value)) {
+                $value = (int)$value;
+            } elseif (is_string($value)) {
+                $value = $this->pdo->quote($value);
+            } elseif (is_null($value)) {
+                $value = 'NULL';
+            } else {
+                throw new \Exception('Wrong data type in ' . $this->methodsPath . ' !');
+            }
+
+            if ($i === $count) {
+                $this->sql .= "`{$key}` = " . $value;
+            } else {
+                $this->sql .= "`{$key}` = $value, ";
+            }
+
+            $i++;
+        }
+
+        return self::$selfInstance;
+    }
+
+    /**
+     * @return false|int
+     * @throws \Exception
+     */
+    public function exec()
+    {
+        try{
+            return $this->pdo->exec($this->sql);
         } catch (\PDOException $PDOException) {
-            $this->catchException($PDOException, 'Error updating data in DB.');
+            $this->catchException(
+                $PDOException,
+                'Error updating data in DB.' . "\n" .
+                'Check : ' . $this->methodsPath . ' !'
+            );
         }
 
         return false;

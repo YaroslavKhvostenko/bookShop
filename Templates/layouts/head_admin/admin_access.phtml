@@ -1,0 +1,51 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\HeadAdmin\AdminView
+ */
+?>
+    <div class="sidebar">
+        <?php include_once 'administrate_sidebar.phtml'?>
+    </div>
+<?php if (!empty($options['data'])): ?>
+    <form action="/head/admin/<?= $this->getFormRequestAction() ?>" method="post">
+        <table border="1" cellpadding="5" cellspacing="0" width="100%">
+            <tr>
+                <th>№</th>
+                <th>Аватар</th>
+                <th>Имя</th>
+                <th>Дата Рождения</th>
+                <th>Почта</th>
+                <th>Телефон</th>
+                <th>Аддресс</th>
+                <th><?= $this->getTableFieldFormValue() ?></th>
+            </tr>
+            <?php
+            $i = 1;
+            foreach ($options['data'] as $admin):
+                ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td>
+                        <?php if ($admin['image'] !== null) : ?>
+                            <img src="/Media/images/admin_users/<?= $admin['image'] ?>" alt="avatar" width="150px" height="150px">
+                        <?php else : ?>
+                            Аватар не выбран
+                        <?php endif; ?>
+                    </td>
+                    <td><?= $admin['name'] ?></td>
+                    <td><?= $admin['birthdate'] ?></td>
+                    <td><?= $admin['email'] ?></td>
+                    <td><?= $admin['phone'] ?></td>
+                    <td><?= $admin['address'] ?></td>
+                    <td>
+                        <input type="checkbox" name="<?= $admin['login']?>"
+                               value="<?=$this->getCheckBoxValue($admin['id'])?>">
+                    </td>
+                </tr>
+            <?php  endforeach; ?>
+
+        </table>
+        <input type="submit" value="Подтвердить">
+    </form>
+<?php endif; ?>

@@ -7,12 +7,16 @@ class ImageValidator
 {
     private array $fileData;
     private const USERS_IMG_SIZE = 'user';
+    private const GUEST_IMG_SIZE = 'guest';
     private const ADMINS_IMG_SIZE = 'admin';
+    private const GUEST_ADMIN_IMG_SIZE = 'guest_admin';
     private const BOOKS_IMG_SIZE = 'book';
     private array $errors = [];
     private const IMG_MAX_SIZE = [
         self::USERS_IMG_SIZE => 524288,
+        self::GUEST_IMG_SIZE => 524288,
         self::ADMINS_IMG_SIZE => 524288,
+        self::GUEST_ADMIN_IMG_SIZE => 524288,
         self::BOOKS_IMG_SIZE => 1048576
     ];
 

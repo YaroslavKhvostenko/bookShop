@@ -4,66 +4,71 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Message\User;
 
 use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
-use Models\ProjectModels\Message\User\Add\MsgModel as UserAddProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Admin\Add\MsgModel as AdminAddProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Admin\Authorization\MsgModel as AdminAuthorizationMsgModel;
-use Models\ProjectModels\Message\User\Admin\Change\MsgModel as AdminChangeProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Admin\Registration\MsgModel as AdminRegisterMsgModel;
-use Models\ProjectModels\Message\User\Admin\Remove\MsgModel as AdminRemoveProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Authorization\MsgModel as UserAuthorizationMsgModel;
-use Models\ProjectModels\Message\User\Change\MsgModel as UserChangeProfileItemMsgModel;
-use Models\ProjectModels\Message\User\Registration\MsgModel as UserRegisterMsgModel;
-use Models\ProjectModels\Message\User\Remove\MsgModel as UserRemoveProfileItemMsgModel;
+use Models\AbstractProjectModels\Message\AbstractMsgModelsFactory;
+use Models\ProjectModels\Message\User\Admin;
 //use mysql_xdevapi\Exception;
 
-class MsgModelsFactory
+class MsgModelsFactory extends AbstractMsgModelsFactory
 {
     /**
-     * @param string $userType
+     * @param string $customerType
      * @param string|null $actionType
-     * @return AbstractBaseMsgModel|null
+     * @return AbstractBaseMsgModel
      * @throws \Exception
      */
-    public static function getMsgModel(string $userType, string $actionType = null): ?AbstractBaseMsgModel
+    public static function getMsgModel(string $customerType, string $actionType = null): AbstractBaseMsgModel
     {
-        if (strtolower($userType) === 'user') {
-            switch (strtolower($actionType)) {
-                case 'registration' :
-                    return new UserRegisterMsgModel();
-                case 'authorization' :
-                    return new UserAuthorizationMsgModel();
-                case 'add' :
-                    return new UserAddProfileItemMsgModel();
-                case 'change' :
-                    return new UserChangeProfileItemMsgModel();
-                case 'remove' :
-                    return new UserRemoveProfileItemMsgModel();
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($userType) === 'admin') {
-            switch (strtolower($actionType)) {
-                case 'registration' :
-                    return new AdminRegisterMsgModel();
-                case 'authorization' :
-                    return new AdminAuthorizationMsgModel();
-                case 'add' :
-                    return new AdminAddProfileItemMsgModel();
-                case 'change' :
-                    return new AdminChangeProfileItemMsgModel();
-                case 'remove' :
-                    return new AdminRemoveProfileItemMsgModel();
-                default :
-                    throw new \Exception(
-                    "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                );
-            }
-        } elseif (strtolower($userType) === 'default') {
-            return new DefaultMsgModel();
-        } else {
-            throw new \Exception("UserType : '$userType' doesn't exist!");
+        $customerType = strtolower($customerType);
+        $className = 'MsgModel';
+        $nameSpace = self::NAME_SPACE . 'User' . self::isDefault($customerType);
+
+        switch ($customerType) {
+            case 'admin' :
+                $nameSpace .= 'Admin\\';
+                break;
+            case 'user' :
+                $nameSpace .= 'User\\';
+                break;
+            case 'guest' :
+                $nameSpace .= 'Guest\\';
+                break;
+            case 'guest_admin' :
+                $nameSpace .= 'GuestAdmin\\';
+                break;
+            case 'default' :
+                $className = 'DefaultMsgModel';
+                break;
+            default :
+                break;
         }
+
+        if (!is_null($actionType)) {
+            $actionType = strtolower($actionType);
+            switch ($actionType) {
+                case 'add' :
+                    $nameSpace .= 'Add';
+                    break;
+                case 'authorization' :
+                    $nameSpace .= 'Authorization';
+                    break;
+                case 'change' :
+                    $nameSpace .= 'Change';
+                    break;
+                case 'registration' :
+                    $nameSpace .= 'Registration';
+                    break;
+                case 'remove' :
+                    $nameSpace .= 'Remove';
+                    break;
+                default :
+                    break;
+            }
+        }
+
+        $classNameWithNamespace = self::createClassDirectoryPath($nameSpace, $className);
+
+        self::isClassExist($classNameWithNamespace);
+
+        return new $classNameWithNamespace();
     }
 }

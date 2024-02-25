@@ -9,66 +9,64 @@ class Manager implements IDataManagement
 {
     private const USER_KEY = 'user';
     private const MESSAGE_KEY = 'resultMsg';
-    private array $messages = [];
-    private ?array $data = null;
+    private const SESS_FIELDS = [
+        self::USER_KEY => self::USER_KEY,
+        self::MESSAGE_KEY => self::MESSAGE_KEY
+    ];
 
-    public function __construct()
+    public function getData(string $fieldName): ?array
     {
-        $this->initialize();
+        if (array_key_exists($fieldName, self::SESS_FIELDS)) {
+            return $_SESSION[$fieldName] ?? null;
+        } else {
+            throw new \InvalidArgumentException(
+                'Wrong $fieldName name in $_SESSION array, 
+                during trying to get data from $_SESSION array!'
+            );
+        }
     }
 
-    public function initialize(): void
+    public function unsetData(string $sessionField, string $dataField = null): void
     {
-        $this->data = $_SESSION;
-        $this->messages = $_SESSION[self::MESSAGE_KEY] ?? [];
+        if (array_key_exists($sessionField, $_SESSION)) {
+            if ($dataField !== null) {
+                if (array_key_exists($dataField, $_SESSION[$sessionField])) {
+                    unset($_SESSION[$sessionField][$dataField]);
+                } else {
+                    throw new \InvalidArgumentException(
+                        'Wrong $dataField name in $_SESSION[$sessionField] array,
+                         during trying to unset data in $_SESSION[$sessionField] array!'
+                    );
+                }
+            } else {
+                unset($_SESSION[$sessionField]);
+            }
+        } else {
+            throw new \InvalidArgumentException(
+                'Wrong $sessionField name in $_SESSION array, 
+                during trying to unset data in $_SESSION array!'
+            );
+        }
     }
 
-    public function destroy(): void
+    public function setData(string $sessionField, string $data, string $dataField = null): void
+    {
+        if (array_key_exists($sessionField, self::SESS_FIELDS)) {
+            if ($dataField !== null) {
+                $_SESSION[$sessionField][$dataField] = $data;
+            } else {
+                $_SESSION[$sessionField][] = $data;
+            }
+        } else {
+            throw new \InvalidArgumentException(
+                'Wrong $sessionField name in $_SESSION array, 
+                during trying to set data in $_SESSION array!'
+            );
+        }
+    }
+
+    public function destroySession(): void
     {
         session_destroy();
-    }
-
-    public function getUser()
-    {
-        return $this->data[self::USER_KEY] ?? null;
-    }
-
-    public function setUserData(string $key, string $data): void
-    {
-        $this->data[self::USER_KEY][$key] = $data;
-        $_SESSION[self::USER_KEY] = $this->data[self::USER_KEY];
-    }
-
-    public function getAllMessages(): array
-    {
-        $this->unsetAllMessages();
-
-        return $this->messages;
-    }
-
-    public function unsetAllMessages(): void
-    {
-        if (array_key_exists(self::MESSAGE_KEY, $_SESSION)) {
-            unset($_SESSION[self::MESSAGE_KEY]);
-        }
-    }
-
-    public function setSessionMsg(string $msg, string $fieldName = null): void
-    {
-        if ($fieldName !== null) {
-            $_SESSION[self::MESSAGE_KEY][$fieldName] = $msg;
-        } else {
-            $_SESSION[self::MESSAGE_KEY][] = $msg;
-        }
-    }
-
-    public function isLogged(): bool
-    {
-        return isset($this->data[self::USER_KEY]);
-    }
-
-    public function deleteUserData(string $field): void
-    {
-        unset($_SESSION[self::USER_KEY][$field]);
     }
 }

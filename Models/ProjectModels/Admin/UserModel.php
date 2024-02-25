@@ -5,6 +5,7 @@ namespace Models\ProjectModels\Admin;
 
 use Models\AbstractProjectModels\AbstractUserModel;
 use Models\ProjectModels\DataRegistry;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class UserModel extends AbstractUserModel
 {
@@ -13,8 +14,55 @@ class UserModel extends AbstractUserModel
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct(SessionModel::getInstance());
         $this->adminPass = DataRegistry::getInstance()->get('config')->getAdminPass();
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     * @throws \Exception
+     */
+    public function createUser(array $data): bool
+    {
+        if (parent::createUser($data)) {
+            $this->logAdminActivity($this->sessionModel->getCustomerData(), 'зарегестрировался и вошёл');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     * @throws \Exception
+     */
+    public function login(array $data): bool
+    {
+        if (parent::login($data)) {
+            $this->logAdminActivity($this->sessionModel->getCustomerData(), 'вошёл');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function logout(): void
+    {
+        $this->logAdminActivity($this->sessionModel->getCustomerData(), 'вышел');
+
+        parent::logout();
+    }
+
+    private function logAdminActivity(array $data, string $activityAction): void
+    {
+        $this->getLogger()->log(
+            'activity',
+            'Админ : ' . $data['login'] . " ({$data['name']}) " . "$activityAction!"
+        );
     }
 
     protected function setDbSpecialFieldsData(array $data): array
@@ -55,35 +103,13 @@ class UserModel extends AbstractUserModel
 
         if ($adminPass !== null) {
             if (!password_verify($adminPass, $this->adminPass)) {
-                $this->msgModel->setMsg(
-                    $this->msgModel->getMessage('failure', 'admin_pass'),
-                    'admin_pass'
-                );
+                $this->msgModel->setMessage('failure', 'admin_pass', 'admin_pass');
 
                 return false;
             }
         }
 
         return true;
-    }
-
-    public function logout(): void
-    {
-        $this->getLogger()->log(
-            'activity',
-            'Админ : ' . $this->sessionInfo->getUser()['login'] .
-            " ({$this->sessionInfo->getUser()['name']}) " . 'вышел.'
-        );
-        parent::logout();
-    }
-
-    protected function setSessionData(array $userData): void
-    {
-        $this->getLogger()->log(
-            'activity',
-            'Админ : ' . $userData['login'] . " ({$userData['name']}) " . 'вошел.'
-        );
-        parent::setSessionData($userData);
     }
 
     protected function getCustomerTable(): string

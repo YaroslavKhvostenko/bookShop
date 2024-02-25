@@ -11,11 +11,7 @@ abstract class AbstractSqlModel
     protected ?Logger $logger = null;
     protected ?AbstractBaseMsgModel $msgModel = null;
 
-    abstract public function selectData(string $tableName, array $field, array $condition = null);
-
-    abstract public function insertData(string $tableName, array $data);
-
-    public function setMsgModel(AbstractBaseMsgModel $msgModel): void
+    public function setMessageModel(AbstractBaseMsgModel $msgModel): void
     {
         if (!$this->msgModel || $this->msgModel instanceof DefaultMsgModel) {
             $this->msgModel = $msgModel;
@@ -45,7 +41,7 @@ abstract class AbstractSqlModel
     protected function getMsgModel(): AbstractBaseMsgModel
     {
         if (!$this->msgModel) {
-            $this->setMsgModel(new DefaultMsgModel());
+            $this->setMessageModel(new DefaultMsgModel());
         }
 
         return $this->msgModel;

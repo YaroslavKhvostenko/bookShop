@@ -3,44 +3,34 @@ declare(strict_types=1);
 
 namespace Controllers\AbstractControllers;
 
-use http\Encoding\Stream\Inflate;
 use Interfaces\IDataManagement;
-use Interfaces\User\UserDataValidatorInterface;
-use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
 use Models\ProjectModels\DataRegistry;
 use Models\ProjectModels\File;
-use Models\ProjectModels\Message\User\MsgModelsFactory;
-use Models\ProjectModels\Post;
-use Models\ProjectModels\Validation\Data\FactoryValidator;
 use Models\ProjectModels\Validation\ImageValidator;
 use Models\AbstractProjectModels\AbstractUserModel;
 use Views\AbstractViews\AbstractDefaultView;
+use Models\AbstractProjectModels\Session\User\AbstractSessionModel;
 //use mysql_xdevapi\Exception;
 
-abstract class AbstractUserController extends AbstractBaseController
+abstract class AbstractUserController extends AbstractController
 {
+    protected const CONTROLLER_NAME = 'User_Controller';
     protected const REQUEST = 'request';
     protected const REFERER = 'referer';
-    protected const USER_TYPE = 'user_type';
-    protected const CONTROLLER = 'controller';
-    protected const ACTION = 'action';
     protected const EMPTY = 'empty';
     protected const WRONG = 'wrong';
     protected const IMAGE = 'image';
-
     protected AbstractUserModel $userModel;
     protected AbstractDefaultView $userView;
-    protected ?IDataManagement $serverInfo = null;
-    protected ?UserDataValidatorInterface $dataValidator = null;
-    protected ?AbstractBaseMsgModel $msgModel = null;
     protected ?ImageValidator $imageValidator = null;
-    protected ?IDataManagement $postInfo = null;
     protected ?IDataManagement $fileInfo = null;
 
     public function __construct(
         AbstractUserModel $userModel,
-        AbstractDefaultView $userView
+        AbstractDefaultView $userView,
+        AbstractSessionModel $sessionModel
     ) {
+        parent::__construct($sessionModel);
         $this->userModel = $userModel;
         $this->userView = $userView;
     }
@@ -51,7 +41,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function registrationAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->sessionModel->isLoggedIn()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -59,12 +49,12 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REQUEST);
-            if (!$this->isNull($params)) {
-                $this->wrongData(
+            if (!is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'Params have to be empty in registrationAction!',
-                    $this->getRequestController(),
-                    $this->getRequestAction()
+                    $this->getServerInfo()->getRequestController(),
+                    $this->getServerInfo()->getRequestAction()
                 );
 
                 return;
@@ -82,7 +72,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function authorizationAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->sessionModel->isLoggedIn()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -90,12 +80,12 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REQUEST);
-            if (!$this->isNull($params)) {
-                $this->wrongData(
+            if (!is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'Params have to be empty in authorizationAction!',
-                    $this->getRequestController(),
-                    $this->getRequestAction()
+                    $this->getServerInfo()->getRequestController(),
+                    $this->getServerInfo()->getRequestAction()
                 );
 
                 return;
@@ -113,7 +103,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function createAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->sessionModel->isLoggedIn()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -127,12 +117,12 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REFERER);
-            if (!$this->isNull($params)) {
-                $this->wrongData(
+            if (!is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'Params have to be empty in createAction!',
-                    $this->getRefererController(),
-                    $this->getRefererAction()
+                    $this->getServerInfo()->getRefererController(),
+                    $this->getServerInfo()->getRefererAction()
                 );
 
                 return;
@@ -140,19 +130,30 @@ abstract class AbstractUserController extends AbstractBaseController
 
             $emptyResult = $this->getDataValidator(self::REFERER)->emptyCheck($this->postInfo->getData());
             if (in_array(false, $emptyResult)) {
-                $this->checkResult($emptyResult, self::EMPTY, $this->getRefererAction());
+                $this->checkResult($emptyResult, self::EMPTY, $this->serverInfo->getRefererAction());
             } else {
                 $correctResult = $this->dataValidator->correctCheck($emptyResult);
                 if (in_array('', $correctResult)) {
-                    $this->checkResult($correctResult, self::WRONG, $this->getRefererAction());
+                    $this->checkResult(
+                        $correctResult, self::WRONG, $this->serverInfo->getRefererAction()
+                    );
                 } else {
                     if ($this->getFileInfo()->isFileSent(self::IMAGE) &&
-                        !$this->getImageValidator()->validate($this->getRefererUserType())) {
-                        $this->checkResult($this->imageValidator->getErrors(), self::WRONG, $this->getRefererAction());
+                        !$this->getImageValidator()->validate($this->sessionModel->getUserType())) {
+                        $this->checkResult(
+                            $this->imageValidator->getErrors(),
+                            self::WRONG,
+                            $this->serverInfo->getRefererAction()
+                        );
                     } else {
-                        $this->userModel->setMsgModel($this->msgModel);
+                        $this->userModel->setMessageModel($this->msgModel);
                         if (!$this->userModel->createUser($correctResult)) {
-                            $this->prepareRedirect($this->createRedirectString($this->getRefererController(), $this->getRefererAction()));
+                            $this->prepareRedirect(
+                                $this->createRedirectString(
+                                    $this->serverInfo->getRefererController(),
+                                    $this->serverInfo->getRefererAction()
+                                )
+                            );
                         } else {
                             $this->redirectHome();
                         }
@@ -160,7 +161,11 @@ abstract class AbstractUserController extends AbstractBaseController
                 }
             }
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRefererController(), $this->getRefererAction());
+            $this->catchException(
+                $exception,
+                $this->getServerInfo()->getRefererController(),
+                $this->getServerInfo()->getRefererAction()
+            );
         }
     }
 
@@ -170,7 +175,7 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function loginAction(array $params = null): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->sessionModel->isLoggedIn()) {
             $this->redirectHomeByCustomerType();
 
             return;
@@ -184,12 +189,12 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REFERER);
-            if (!$this->isNull($params)) {
-                $this->wrongData(
+            if (!is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'Params have to be empty in loginAction!',
-                    $this->getRefererController(),
-                    $this->getRefererAction()
+                    $this->getServerInfo()->getRefererController(),
+                    $this->getServerInfo()->getRefererAction()
                 );
 
                 return;
@@ -197,17 +202,25 @@ abstract class AbstractUserController extends AbstractBaseController
 
             $emptyResult = $this->getDataValidator(self::REFERER)->emptyCheck($this->postInfo->getData());
             if (in_array(false, $emptyResult)) {
-                $this->checkResult($emptyResult, self::EMPTY, $this->getRefererAction());
+                $this->checkResult($emptyResult, self::EMPTY, $this->serverInfo->getRefererAction());
             } else {
-                $this->userModel->setMsgModel($this->msgModel);
+                $this->userModel->setMessageModel($this->msgModel);
                 if (!$this->userModel->login($emptyResult)) {
-                    $this->prepareRedirect($this->createRedirectString($this->getRefererController(), $this->getRefererAction()));
+                    $this->prepareRedirect(
+                        $this->createRedirectString(
+                            $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction()
+                        )
+                    );
                 } else {
                     $this->redirectHome();
                 }
             }
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRefererController(), $this->getRefererAction());
+            $this->catchException(
+                $exception,
+                $this->getServerInfo()->getRefererController(),
+                $this->getServerInfo()->getRefererAction()
+            );
         }
     }
 
@@ -221,16 +234,20 @@ abstract class AbstractUserController extends AbstractBaseController
     {
         foreach ($result as $field => $value) {
             if (!$value) {
-                $this->msgModel->setMsg($this->msgModel->getMessage($messagesType, $field), $field);
+                $this->msgModel->setMessage($messagesType, $field, $field);
             }
         }
 
-        $this->prepareRedirect($this->createRedirectString($this->getRefererController(), $actionType));
+        $this->prepareRedirect(
+            $this->createRedirectString(
+                $this->getServerInfo()->getRefererController(), $actionType
+            )
+        );
     }
 
     public function logoutAction(): void
     {
-        if ($this->userModel->isSigned()) {
+        if ($this->sessionModel->isLoggedIn()) {
             $this->logoutByCustomerType();
         } else {
             $this->redirectHome();
@@ -239,7 +256,7 @@ abstract class AbstractUserController extends AbstractBaseController
 
     protected function redirectHomeByCustomerType(): void
     {
-        if ($this->userModel->isAdmin()) {
+        if ($this->sessionModel->isAdmin()) {
             $this->redirect('admin/');
         } else {
             $this->redirect();
@@ -259,7 +276,7 @@ abstract class AbstractUserController extends AbstractBaseController
      * @return IDataManagement
      * @throws \Exception
      */
-    private function getFileInfo(): IDataManagement
+    protected function getFileInfo(): IDataManagement
     {
         if (!$this->fileInfo) {
             DataRegistry::getInstance()->register('file', new File\Manager());
@@ -270,40 +287,26 @@ abstract class AbstractUserController extends AbstractBaseController
     }
 
     /**
-     * @return IDataManagement
-     * @throws \Exception
-     */
-    private function getPostInfo(): IDataManagement
-    {
-        if (!$this->postInfo) {
-            DataRegistry::getInstance()->register('post', new Post\Manager());
-            $this->postInfo = DataRegistry::getInstance()->get('post');
-        }
-
-        return $this->postInfo;
-    }
-
-    /**
      * @param array|null $params
      * @throws \Exception
      */
     public function profileAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
 
         try {
             $this->getMsgModel();
-            if (!$this->isNull($params)) {
-                $this->wrongData('default', 'Params have to be empty in profileAction!');
+            if (!is_null($params)) {
+                $this->processWrongRequest('default', 'Params have to be empty in profileAction!');
 
                 return;
             }
 
-            $this->userModel->setMsgModel($this->msgModel);
+            $this->userModel->setMessageModel($this->msgModel);
             if (!$this->userModel->profile()) {
                 $this->redirectHome();
             } else {
@@ -326,19 +329,19 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function changeAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
 
         try {
             $this->getMsgModel(self::REQUEST);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'changeAction have to receive changing field from request URI string!',
-                    $this->getRequestController(),
+                    $this->serverInfo->getRequestController(),
                     'profile'
                 );
 
@@ -350,12 +353,14 @@ abstract class AbstractUserController extends AbstractBaseController
                 $field = $this->getDataValidator(self::REQUEST)->validateFieldName(strtolower($params[0]));
             }
 
-            $this->userModel->setMsgModel($this->msgModel);
+            $this->userModel->setMessageModel($this->msgModel);
             $result = $this->userModel->change($field);
             $options = $this->userView->getOptions('Изменение данных', 'change_profile_item.phtml', $result);
             $this->userView->render($options);
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRequestController(), 'profile');
+            $this->catchException(
+                $exception, $this->getServerInfo()->getRequestController(), 'profile'
+            );
         }
     }
 
@@ -365,8 +370,8 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function updateAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
@@ -379,11 +384,11 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REFERER);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'updateAction have to receive changing field from request URI string!',
-                    $this->getRefererController(),
+                    $this->serverInfo->getRefererController(),
                     'profile'
                 );
 
@@ -396,9 +401,11 @@ abstract class AbstractUserController extends AbstractBaseController
                 $this->updateUserDataPost(strtolower($params[0]));
             }
 
-            $this->prepareRedirect($this->createRedirectString($this->getRefererController(), 'profile'));
+            $this->prepareRedirect(
+                $this->createRedirectString($this->serverInfo->getRefererController(), 'profile')
+            );
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRefererController(), 'profile');
+            $this->catchException($exception, $this->getServerInfo()->getRefererController(), 'profile');
         }
     }
 
@@ -422,17 +429,17 @@ abstract class AbstractUserController extends AbstractBaseController
     {
         $this->getImageValidator()->compareFieldNames($fieldName);
         if (!$this->fileInfo->isFileSent($fieldName)) {
-            $this->msgModel->setMsg($this->msgModel->getMessage(self::EMPTY, $fieldName), $fieldName);
+            $this->msgModel->setMessage(self::EMPTY, $fieldName, $fieldName);
 
             return false;
         }
 
-        if (!$this->getImageValidator()->validate($this->getRefererUserType())) {
+        if (!$this->getImageValidator()->validate($this->sessionModel->getUserType())) {
             $this->checkResult($this->imageValidator->getErrors(), self::WRONG, 'profile');
 
             return false;
         } else {
-            $this->userModel->setMsgModel($this->msgModel);
+            $this->userModel->setMessageModel($this->msgModel);
         }
 
         return true;
@@ -472,13 +479,13 @@ abstract class AbstractUserController extends AbstractBaseController
         $this->getDataValidator(self::REFERER)->compareFieldNames($fieldName, $postData);
         $emptyResult = $this->dataValidator->emptyCheck($postData);
         if (in_array(false, $emptyResult)) {
-            $this->checkResult($emptyResult, self::EMPTY, $this->getRefererAction());
+            $this->checkResult($emptyResult, self::EMPTY, $this->serverInfo->getRefererAction());
         } else {
             $correctResult = $this->dataValidator->correctCheck($emptyResult);
             if (in_array('', $correctResult)) {
-                $this->checkResult($correctResult, self::WRONG, $this->getRefererAction());
+                $this->checkResult($correctResult, self::WRONG, $this->serverInfo->getRefererAction());
             } else {
-                $this->userModel->setMsgModel($this->msgModel);
+                $this->userModel->setMessageModel($this->msgModel);
 
                 return $correctResult;
             }
@@ -505,19 +512,19 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function addAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
 
         try {
             $this->getMsgModel(self::REQUEST);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'addAction have to receive changing field from request URI string!',
-                    $this->getRequestController(),
+                    $this->serverInfo->getRequestController(),
                     'profile'
                 );
 
@@ -533,7 +540,9 @@ abstract class AbstractUserController extends AbstractBaseController
             $options = $this->userView->getOptions('Добавление данных', 'add_profile_item.phtml', $field);
             $this->userView->render($options);
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRequestController(), 'profile');
+            $this->catchException(
+                $exception, $this->getServerInfo()->getRequestController(), 'profile'
+            );
         }
     }
 
@@ -543,8 +552,8 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function newAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
@@ -557,11 +566,11 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REFERER);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'newAction have to receive changing field from request URI string!',
-                    $this->getRefererController(),
+                    $this->serverInfo->getRefererController(),
                     'profile'
                 );
 
@@ -574,9 +583,11 @@ abstract class AbstractUserController extends AbstractBaseController
                 $this->newUserDataPost(strtolower($params[0]));
             }
 
-            $this->prepareRedirect($this->createRedirectString($this->getRefererController(), 'profile'));
+            $this->prepareRedirect(
+                $this->createRedirectString($this->serverInfo->getRefererController(), 'profile')
+            );
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRefererController(), 'profile');
+            $this->catchException($exception, $this->getServerInfo()->getRefererController(), 'profile');
         }
     }
 
@@ -586,8 +597,8 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function deleteAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
@@ -600,11 +611,11 @@ abstract class AbstractUserController extends AbstractBaseController
 
         try {
             $this->getMsgModel(self::REFERER);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'deleteAction have to receive changing field from request URI string!',
-                    $this->getRefererController(),
+                    $this->serverInfo->getRefererController(),
                     'profile'
                 );
 
@@ -617,37 +628,16 @@ abstract class AbstractUserController extends AbstractBaseController
                 $params[0] = $this->getDataValidator('referer')->validateFieldName(strtolower($params[0]));
             }
 
-            $this->userModel->setMsgModel($this->msgModel);
+            $this->userModel->setMessageModel($this->msgModel);
             $this->userModel->delete(strtolower($params[0]));
-            $this->prepareRedirect($this->createRedirectString($this->getRefererController(), 'profile'));
+            $this->prepareRedirect(
+                $this->createRedirectString($this->serverInfo->getRefererController(), 'profile')
+            );
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRefererController(), 'profile');
+            $this->catchException(
+                $exception, $this->getServerInfo()->getRefererController(), 'profile'
+            );
         }
-    }
-
-    /**
-     * @return UserDataValidatorInterface|null
-     * @throws \Exception
-     */
-    protected function getDataValidator(string $uriType): UserDataValidatorInterface
-    {
-        if (!$this->dataValidator) {
-            switch (strtolower($uriType)) {
-                case 'request' :
-                    $this->dataValidator = FactoryValidator::getValidator(
-                        $this->getRequestUserType(),
-                        $this->getRequestAction()
-                    );
-                    break;
-                case 'referer' :
-                    $this->dataValidator = FactoryValidator::getValidator($this->getRefererUserType(), $this->getRefererAction());
-                    break;
-                default :
-                    throw new \Exception('Wrong URI type declaration for creation of DataValidator');
-            }
-        }
-
-        return $this->dataValidator;
     }
 
     /**
@@ -656,19 +646,19 @@ abstract class AbstractUserController extends AbstractBaseController
      */
     public function removeAction(array $params = null): void
     {
-        if (!$this->userModel->isSigned() || $this->validateRequester()) {
-            $this->redirectHome();
+        if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
+            $this->redirectHomeByCustomerType();
 
             return;
         }
 
         try {
             $this->getMsgModel(self::REQUEST);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
                     'removeAction have to receive changing field from request URI string!',
-                    $this->getRequestController(),
+                    $this->serverInfo->getRequestController(),
                     'profile'
                 );
 
@@ -680,202 +670,17 @@ abstract class AbstractUserController extends AbstractBaseController
                 $param = $this->getDataValidator(self::REQUEST)->validateFieldName(strtolower($params[0]));
             }
 
-            $this->userModel->setMsgModel($this->msgModel);
+            $this->userModel->setMessageModel($this->msgModel);
             $data = $this->userModel->remove($param);
             if ($data !== null) {
                 $options = $this->userView->getOptions('Удаление данных', 'remove_profile_item.phtml', $data);
                 $this->userView->render($options);
             }
         } catch (\Exception $exception) {
-            $this->catchException($exception, $this->getRequestController(), 'profile');
+            $this->catchException(
+                $exception, $this->getServerInfo()->getRequestController(), 'profile'
+            );
         }
-    }
-
-    /**
-     * @return IDataManagement
-     * @throws \Exception
-     */
-    protected function getServerInfo(): IDataManagement
-    {
-        if (!$this->serverInfo) {
-            $this->serverInfo = DataRegistry::getInstance()->get('server');
-        }
-
-        return $this->serverInfo;
-    }
-
-    /**
-     * @param string $uriType
-     * @return AbstractBaseMsgModel
-     * @throws \Exception
-     */
-    protected function getMsgModel(string $uriType = 'default'): AbstractBaseMsgModel
-    {
-        switch ($uriType) {
-            case 'referer' :
-                return $this->getMsgModelByReferer();
-            case 'request' :
-                return $this->getMsgModelByRequest();
-            case 'default' :
-                $this->msgModel = MsgModelsFactory::getMsgModel('default');
-                return $this->msgModel;
-            default :
-                throw new \Exception('Unknown MsgModel type in AbstractUserController :' . " '$uriType'");
-        }
-    }
-
-    /**
-     * @param string $option
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRefererOption(string $option): string
-    {
-        return $this->getServerInfo()->getRefererOption($option);
-    }
-
-    /**
-     * @param string $option
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestOption(string $option): string
-    {
-        return $this->getServerInfo()->getRequestOption($option);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestUserType(): string
-    {
-        return $this->getRequestOption(self::USER_TYPE);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestController(): string
-    {
-        return $this->getRequestOption(self::CONTROLLER);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestAction(): string
-    {
-        return $this->getRequestOption(self::ACTION);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRefererUserType(): string
-    {
-        return $this->getRefererOption(self::USER_TYPE);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRefererController(): string
-    {
-        return $this->getRefererOption(self::CONTROLLER);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRefererAction(): string
-    {
-        return $this->getRefererOption(self::ACTION);
-    }
-
-    /**
-     * @return AbstractBaseMsgModel
-     * @throws \Exception
-     */
-    protected function getMsgModelByReferer(): AbstractBaseMsgModel
-    {
-        if (!$this->msgModel) {
-            $this->msgModel = MsgModelsFactory::getMsgModel($this->getRefererUserType(), $this->getRefererAction());
-        }
-
-        return $this->msgModel;
-    }
-
-    /**
-     * @return AbstractBaseMsgModel
-     * @throws \Exception
-     */
-    protected function getMsgModelByRequest(): AbstractBaseMsgModel
-    {
-        if (!$this->msgModel) {
-            $this->msgModel = MsgModelsFactory::getMsgModel($this->getRequestUserType(), $this->getRequestAction());
-        }
-
-        return $this->msgModel;
-    }
-
-    /**
-     * @param \Exception $exception
-     * @param string|null $controller
-     * @param string|null $action
-     * @param string|null $params
-     * @throws \Exception
-     */
-    protected function catchException(
-        \Exception $exception,
-        string $controller = null,
-        string $action = null,
-        string $params = null
-    ): void {
-        $this->getLogger()->logException($exception);
-        $this->msgModel->setErrorMsg();
-        $this->prepareRedirect($this->createRedirectString($controller, $action, $params));
-    }
-
-    protected function isNull($data): bool
-    {
-        return $data === null;
-    }
-
-    protected function createRedirectString(
-        string $controller = null,
-        string $action = null,
-        string $params = null
-    ): string {
-        $redirectString = '';
-        if ($controller !== null) {
-            $redirectString .= $controller;
-            if ($action !== null) {
-                $redirectString .= '/' . $action;
-                if ($params !== null) {
-                    $redirectString .= '/' . $params;
-                }
-            }
-        }
-
-        return $redirectString;
-    }
-
-    protected function wrongData(
-        string $logFileType,
-        string $logMsg,
-        string $controller = null,
-        string $action = null,
-        string $params = null
-    ): void {
-        $this->getLogger()->log($logFileType, $logMsg);
-        $this->msgModel->setErrorMsg();
-        $this->prepareRedirect($this->createRedirectString($controller, $action, $params));
     }
 
     abstract protected function validateRequester(): bool;

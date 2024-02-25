@@ -1,0 +1,21 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\Admin\BookView
+ */
+?>
+<form action="/admin/book/new/<?= $this->getParam() ?>" method="post" enctype="multipart/form-data">
+    <label><?= $this->getLabelData('add')?></label>
+    <br>
+    <input name="<?= $this->getInputValue() ?>" type="text" />
+    <br>
+    <button type="submit">Добавить</button>
+</form>
+
+<?php if(!empty($options['data'])): ?>
+    <ol>
+    <?php foreach ($options['data'] as $value): ?>
+        <li> <?= $value[$this->getFieldName()] ?></li>
+    <?php endforeach; ?>
+    </ol>
+<?php endif; ?>
