@@ -133,6 +133,11 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         $this->sql .= ' WHERE ';
         foreach ($conditionData as $field => $data) {
             $this->sql .= "`{$field}` ";
+            $conditionOperator = null;
+            if (!is_null($andOr)) {
+                $conditionOperator = array_shift($andOr);
+            }
+
             if (is_array($data)) {
                 $arrayDataCounter = 1;
                 $countDataArray = count($data);
@@ -141,8 +146,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                     $value = $this->handleData($value);
                     if ($arrayDataCounter === $countDataArray) {
                         $this->sql .= "{$value}) ";
-                        if (is_array($andOr)) {
-                            $conditionOperator = array_shift($andOr);
+                        if (!is_null($conditionOperator)) {
                             $this->sql .= $conditionOperator . ' ';
                         }
                     } else {
@@ -162,8 +166,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                     $this->sql .= "{$operator} {$data}";
                 } else {
                     $this->sql .= "{$operator} {$data} ";
-                    if (is_array($andOr)) {
-                        $conditionOperator = array_shift($andOr);
+                    if (!is_null($conditionOperator)) {
                         $this->sql .= $conditionOperator . ' ';
                     }
                 }

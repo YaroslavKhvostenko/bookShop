@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: localhost:3306
--- Время создания: Фев 25 2024 г., 13:16
+-- Время создания: Фев 25 2024 г., 22:37
 -- Версия сервера: 8.0.36-0ubuntu0.20.04.1
 -- Версия PHP: 7.4.33
 
@@ -234,7 +234,9 @@ ALTER TABLE `order_item`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `users_login_users_email_users_phone` (`login`,`email`,`phone`),
+  ADD UNIQUE KEY `users_login` (`login`),
+  ADD UNIQUE KEY `users_email` (`email`),
+  ADD UNIQUE KEY `users_phone` (`phone`),
   ADD KEY `users_is_active` (`is_active`);
 
 --
