@@ -5,7 +5,7 @@ namespace Models\ProjectModels\Admin;
 
 use Models\AbstractProjectModels\AbstractUserModel;
 use Models\ProjectModels\DataRegistry;
-use Models\ProjectModels\Session\User\Admin\SessionModel;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class UserModel extends AbstractUserModel
 {
@@ -26,7 +26,7 @@ class UserModel extends AbstractUserModel
     public function createUser(array $data): bool
     {
         if (parent::createUser($data)) {
-            $this->logAdminActivity($this->sessionModel->getUserData(), 'зарегестрировался и вошёл');
+            $this->logAdminActivity($this->sessionModel->getCustomerData(), 'зарегестрировался и вошёл');
 
             return true;
         }
@@ -42,7 +42,7 @@ class UserModel extends AbstractUserModel
     public function login(array $data): bool
     {
         if (parent::login($data)) {
-            $this->logAdminActivity($this->sessionModel->getUserData(), 'вошёл');
+            $this->logAdminActivity($this->sessionModel->getCustomerData(), 'вошёл');
 
             return true;
         }
@@ -52,7 +52,7 @@ class UserModel extends AbstractUserModel
 
     public function logout(): void
     {
-        $this->logAdminActivity($this->sessionModel->getUserData(), 'вышел');
+        $this->logAdminActivity($this->sessionModel->getCustomerData(), 'вышел');
 
         parent::logout();
     }
@@ -103,7 +103,7 @@ class UserModel extends AbstractUserModel
 
         if ($adminPass !== null) {
             if (!password_verify($adminPass, $this->adminPass)) {
-                $this->msgModel->setMsg('failure', 'admin_pass', 'admin_pass');
+                $this->msgModel->setMessage('failure', 'admin_pass', 'admin_pass');
 
                 return false;
             }

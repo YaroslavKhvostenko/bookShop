@@ -3,44 +3,54 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Validation\Data\Admin;
 
-use Interfaces\Admin\AdminDataValidatorInterface;
-use Models\ProjectModels\Validation\Data\Admin\Head\Provide;
-use Models\ProjectModels\Validation\Data\Admin\Head\Remove;
-use Models\ProjectModels\Validation\Data\Admin\Head\Redirect;
+use Interfaces\Validator\Admin\ValidatorInterface;
+use Models\AbstractProjectModels\Validation\Data\AbstractFactoryValidator;
+
 //use mysql_xdevapi\Exception;
 
-class FactoryValidator
+class FactoryValidator extends AbstractFactoryValidator
 {
     /**
-     * @param string $adminType
+     * @param string $customerType
      * @param string $actionType
-     * @return AdminDataValidatorInterface
+     * @return ValidatorInterface
      * @throws \Exception
      */
-    public static function getValidator(string $adminType, string $actionType): AdminDataValidatorInterface
+    public static function getValidator(string $customerType, string $actionType): ValidatorInterface
     {
-        if (strtolower($adminType) === 'head_admin') {
-            switch (strtolower($actionType)) {
-                case 'provide' :
-                    return new Provide\Validator();
-                case 'remove' :
-                    return new Remove\Validator();
-                case 'redirect' :
-                    return new Redirect\Validator();
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $adminType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($adminType) === 'admin') {
-            switch (strtolower($actionType)) {
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $adminType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } else {
-            throw new \Exception("UserType : '$adminType' doesn't exist!");
+        $customerType = strtolower($customerType);
+        $className = 'Validator';
+        $nameSpace = self::NAME_SPACE . 'Admin' . '\\';
+
+        switch ($customerType) {
+            case 'head_admin' :
+                $nameSpace .= 'HeadAdmin\\';
+                break;
+            case 'admin' :
+                $nameSpace .= 'Admin\\';
+                break;
+            default :
+                break;
         }
+
+        $actionType = strtolower($actionType);
+        switch ($actionType) {
+            case 'provide':
+                $nameSpace .= 'Provide';
+                break;
+            case 'redirect':
+                $nameSpace .= 'Redirect';
+                break;
+            case 'remove':
+                $nameSpace .= 'Remove';
+                break;
+            default:
+                break;
+        }
+
+        $classNameWithNamespace = self::createClassDirectoryPath($nameSpace, $className);
+        self::isClassExist($classNameWithNamespace);
+
+        return new $classNameWithNamespace();
     }
 }

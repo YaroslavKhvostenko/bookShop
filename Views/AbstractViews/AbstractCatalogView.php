@@ -4,8 +4,7 @@ declare(strict_types=1);
 namespace Views\AbstractViews;
 
 use http\Exception\InvalidArgumentException;
-use Models\AbstractProjectModels\Session\Message\AbstractSessionModel as MsgSessModel;
-use Models\AbstractProjectModels\Session\User\AbstractSessionModel as CustomerSessModel;
+use Models\AbstractProjectModels\Session\User\AbstractSessionModel as UserSessionModel;
 
 abstract class AbstractCatalogView extends AbstractDefaultView
 {
@@ -24,14 +23,9 @@ abstract class AbstractCatalogView extends AbstractDefaultView
         'Декабря'
     ];
 
-    public function __construct(MsgSessModel $msgSessModel, CustomerSessModel $userSessModel)
+    public function __construct(UserSessionModel $userSessModel)
     {
-        parent::__construct($msgSessModel, $userSessModel);
-    }
-
-    protected function getContentPath(): string
-    {
-        return $this->getPath();
+        parent::__construct($userSessModel);
     }
 
     protected function getPubDate(string $pubDate): ?string

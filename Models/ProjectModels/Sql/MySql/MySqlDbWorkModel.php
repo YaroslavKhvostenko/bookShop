@@ -127,7 +127,6 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
      */
     public function condition(array $conditionData, array $andOr = null): self
     {
-        $andOrOperator = !is_null($andOr);
         $this->methodsPath .= '->condition()';
         $globalCounter = 1;
         $globalCount = count($conditionData);
@@ -141,11 +140,11 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                 foreach ($data as $value) {
                     $value = $this->handleData($value);
                     if ($arrayDataCounter === $countDataArray) {
-                        if ($andOrOperator) {
-                            $andOrOperator = array_shift($andOr);
-                            $this->sql .= "{$value}) {$andOrOperator} " ;
-                        }
                         $this->sql .= "{$value}) ";
+                        if (is_array($andOr)) {
+                            $conditionOperator = array_shift($andOr);
+                            $this->sql .= $conditionOperator . ' ';
+                        }
                     } else {
                         $this->sql .= "{$value}, ";
                     }
@@ -162,11 +161,10 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                 if ($globalCounter === $globalCount) {
                     $this->sql .= "{$operator} {$data}";
                 } else {
-                    if ($andOrOperator) {
-                        $andOrOperator = array_shift($andOr);
-                        $this->sql .= "{$operator} {$data} {$andOrOperator} ";
-                    } else {
-                        $this->sql .= "{$operator} {$data} ";
+                    $this->sql .= "{$operator} {$data} ";
+                    if (is_array($andOr)) {
+                        $conditionOperator = array_shift($andOr);
+                        $this->sql .= $conditionOperator . ' ';
                     }
                 }
             }
@@ -287,7 +285,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
      */
     public function insertData(string $tableName, array $data): bool
     {
-        $insert = 'INSERT INTO' . ' ' .  "`{$tableName}`" . ' (';
+        $insert = 'INSERT INTO ' . "`{$tableName}` (";
         $values = 'VALUES (';
         $i = 1;
         $count = count($data);

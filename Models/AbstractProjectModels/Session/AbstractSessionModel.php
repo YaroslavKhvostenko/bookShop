@@ -28,11 +28,6 @@ abstract class AbstractSessionModel
 
     }
 
-//    public static function getInstance(): AbstractSessionModel
-//    {
-//        return static::createSelf();
-//    }
-
     abstract public static function getInstance();
 
     abstract protected static function createSelf();
@@ -56,6 +51,4 @@ abstract class AbstractSessionModel
     {
         $this->sessionInfo->unsetData($sessionField, $dataField);
     }
-
-
 }

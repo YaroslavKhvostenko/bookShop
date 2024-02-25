@@ -3,38 +3,51 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Validation\Data\Book;
 
-use Interfaces\Book\BookDataValidatorInterface;
+use Interfaces\Validator\Book\ValidatorInterface;
+use Models\AbstractProjectModels\Validation\Data\AbstractFactoryValidator;
 use Models\ProjectModels\Validation\Data\Book\Admin;
 //use mysql_xdevapi\Exception;
 
-class FactoryValidator
+class FactoryValidator extends AbstractFactoryValidator
 {
     /**
-     * @param string $userType
+     * @param string $customerType
      * @param string $actionType
-     * @return BookDataValidatorInterface
+     * @return ValidatorInterface
      * @throws \Exception
      */
-    public static function getValidator(string $userType, string $actionType): BookDataValidatorInterface
+    public static function getValidator(string $customerType, string $actionType): ValidatorInterface
     {
-        if (strtolower($userType) === 'admin') {
-            switch (strtolower($actionType)) {
-                case 'add' :
-                    return new Admin\Add\Validator();
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($userType) === 'user') {
-            switch (strtolower($actionType)) {
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } else {
-            throw new \Exception("UserType : '$userType' doesn't exist!");
+        $customerType = strtolower($customerType);
+        $className = 'Validator';
+        $nameSpace = self::NAME_SPACE . 'Book' . '\\';
+
+        switch ($customerType) {
+            case 'admin' :
+                $nameSpace .= 'Admin\\';
+                break;
+            case 'user' :
+                $nameSpace .= 'User\\';
+                break;
+            case 'guest' :
+                $nameSpace .= 'Guest\\';
+                break;
+            default :
+                break;
         }
+
+        $actionType = strtolower($actionType);
+        switch ($actionType) {
+            case 'add':
+                $nameSpace .= 'Add';
+                break;
+            default:
+                break;
+        }
+
+        $classNameWithNamespace = self::createClassDirectoryPath($nameSpace, $className);
+        self::isClassExist($classNameWithNamespace);
+
+        return new $classNameWithNamespace();
     }
 }

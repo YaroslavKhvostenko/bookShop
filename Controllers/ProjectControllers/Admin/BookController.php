@@ -10,6 +10,7 @@ use Views\ProjectViews\Admin\BookView;
 use Models\ProjectModels\DataRegistry;
 use Models\ProjectModels\File;
 use Models\ProjectModels\Validation\ImageValidator;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class BookController extends AbstractBookController
 {
@@ -18,7 +19,7 @@ class BookController extends AbstractBookController
 
     public function __construct()
     {
-        parent::__construct(new BookModel(), new BookView());
+        parent::__construct(new BookModel(), new BookView(), SessionModel::getInstance());
     }
 
     /**
@@ -35,11 +36,11 @@ class BookController extends AbstractBookController
 
         try {
             $this->getMsgModel(self::REQUEST);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
-                    'Params have not to be null in ' . $this->getRequestAction() . 'Action!',
-                    $this->getRequestController(),
+                    'Params have not to be null in ' . $this->serverInfo->getRequestAction() . 'Action!',
+                    $this->serverInfo->getRequestController(),
                     'catalog',
                     'show'
                 );
@@ -48,12 +49,12 @@ class BookController extends AbstractBookController
             }
 
             $this->param = $this->getDataValidator(self::REQUEST)->validateUriParam($params);
-            $this->bookModel->setMsgModel($this->msgModel);
+            $this->bookModel->setMessageModel($this->msgModel);
             $data = $this->bookModel->add($this->param);
             $this->bookView->setParam($this->param);
             $options = $this->bookView->getOptions(
-                $this->bookView->getTitle($this->getRequestAction()) ,
-                $this->bookView->getPage($this->getRequestAction()),
+                $this->bookView->getTitle($this->serverInfo->getRequestAction()) ,
+                $this->bookView->getPage($this->serverInfo->getRequestAction()),
                 $data
             );
             $this->bookView->render($options);
@@ -82,10 +83,10 @@ class BookController extends AbstractBookController
 
         try {
             $this->getMsgModel(self::REFERER);
-            if ($this->isNull($params)) {
-                $this->wrongData(
+            if (is_null($params)) {
+                $this->processWrongRequest(
                     'default',
-                    'Params have not to be null in ' . $this->getRequestAction() . 'Action!',
+                    'Params have not to be null in ' . $this->serverInfo->getRequestAction() . 'Action!',
                     'catalog', 'show'
                 );
 
@@ -97,25 +98,27 @@ class BookController extends AbstractBookController
             if (in_array('', $data)) {
                 $this->checkResult(
                     $data, 'empty', '',
-                    $this->getRefererController(), $this->getRefererAction(), $this->param
+                    $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction(), $this->param
                 );
             } else {
                 $data = $this->dataValidator->correctCheck($data);
                 if (in_array('', $data)) {
                     $this->checkResult(
                         $data, 'wrong', '',
-                        $this->getRefererController(), $this->getRefererAction(), $this->param
+                        $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction(), $this->param
                     );
                 } else {
                     if ($this->param === 'book' && !$this->newBook()) {
                         return;
                     }
 
-                    $this->bookModel->setMsgModel($this->msgModel);
+                    $this->bookModel->setMessageModel($this->msgModel);
                     $this->bookModel->newItem($data, $this->param);
                     $this->prepareRedirect(
                         $this->createRedirectString(
-                            $this->getRefererController(), $this->getRefererAction(), $this->param
+                            $this->serverInfo->getRefererController(),
+                            $this->serverInfo->getRefererAction(),
+                            $this->param
                         )
                     );
                 }
@@ -132,7 +135,7 @@ class BookController extends AbstractBookController
     private function newBook(): bool
     {
         if (!$this->getFileInfo()->isFileSent('image')) {
-            $this->msgModel->setMsg('empty', 'image', 'image');
+            $this->msgModel->setMessage('empty', 'image', 'image');
 
             return false;
         }
@@ -142,8 +145,8 @@ class BookController extends AbstractBookController
                 $this->imageValidator->getErrors(),
                 'wrong',
                 false,
-                $this->getRefererController(),
-                $this->getRefererAction(),
+                $this->serverInfo->getRefererController(),
+                $this->serverInfo->getRefererAction(),
                 $this->param
             );
 
@@ -157,7 +160,7 @@ class BookController extends AbstractBookController
      * @return IDataManagement
      * @throws \Exception
      */
-    private function getFileInfo(): IDataManagement
+    protected function getFileInfo(): IDataManagement
     {
         if (!$this->fileInfo) {
             DataRegistry::getInstance()->register('file', new File\Manager());
@@ -189,23 +192,18 @@ class BookController extends AbstractBookController
 
     protected function redirectHomeByCustomerType(): void
     {
-        if ($this->bookModel->getSessModel()->isHeadAdmin()) {
+        if ($this->sessionModel->isHeadAdmin()) {
             $this->prepareRedirect();
         } else {
             $this->redirect();
         }
     }
 
-    protected function isNull($data): bool
-    {
-        return $data === null;
-    }
-
     protected function validateRequest(): bool
     {
-        return $this->bookModel->getSessModel()->isHeadAdmin() ||
-            !$this->bookModel->getSessModel()->isAdmin() ||
-            !$this->bookModel->getSessModel()->isApproved();
+        return $this->sessionModel->isHeadAdmin() ||
+            !$this->sessionModel->isAdmin() ||
+            !$this->sessionModel->isApproved();
     }
 
 }

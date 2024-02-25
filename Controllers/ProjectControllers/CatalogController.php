@@ -6,59 +6,27 @@ namespace Controllers\ProjectControllers;
 use Controllers\AbstractControllers\AbstractCatalogController;
 use Models\ProjectModels\CatalogModel;
 use Views\ProjectViews\CatalogView;
-use Models\AbstractProjectModels\Message\Catalog\AbstractBaseMsgModel;
-use Models\ProjectModels\Message\Catalog\MsgModelsFactory;
+use Models\ProjectModels\Session\User\SessionModel;
 
 class CatalogController extends AbstractCatalogController
 {
 
     public function __construct()
     {
-        parent::__construct(new CatalogModel(), new CatalogView());
+        parent::__construct(new CatalogModel(), new CatalogView(), SessionModel::getInstance());
     }
 
     protected function validateRequest(): bool
     {
-        return $this->catalogModel->getSessModel()->isAdmin();
+        return $this->sessionModel->isAdmin();
     }
 
     protected function prepareRedirect(string $url = null): void
     {
-        if ($this->catalogModel->getSessModel()->isAdmin()) {
+        if ($this->sessionModel->isAdmin()) {
             $this->redirect('admin/');
         } else {
             $this->redirect();
         }
-    }
-
-    protected function getMsgModelByReferer(): AbstractBaseMsgModel
-    {
-        if (!$this->msgModel) {
-            $this->msgModel = MsgModelsFactory::getMsgModel($this->getCustomerType(), $this->getRefererAction());
-        }
-
-        return $this->msgModel;
-    }
-
-    /**
-     * @return AbstractBaseMsgModel
-     * @throws \Exception
-     */
-    protected function getMsgModelByRequest(): AbstractBaseMsgModel
-    {
-        if (!$this->msgModel) {
-            $this->msgModel = MsgModelsFactory::getMsgModel($this->getCustomerType(), $this->getRequestAction());
-        }
-
-        return $this->msgModel;
-    }
-
-    private function getCustomerType(): string
-    {
-        if ($this->catalogModel->getSessModel()->isLogged()) {
-            return 'user';
-        }
-
-        return 'not_logged';
     }
 }

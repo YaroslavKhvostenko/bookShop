@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Models\AbstractProjectModels;
 
-use http\Exception\InvalidArgumentException;
 use Models\AbstractProjectModels\Session\User\AbstractSessionModel;
 use Models\ProjectModels\Sql\MySql\MySqlDbWorkModel;
 
@@ -41,7 +40,7 @@ abstract class AbstractCatalogModel extends AbstractDefaultModel
      * @return array|null
      * @throws \Exception
      */
-    public function catalog(): ?array
+    public function getCatalog(): ?array
     {
         $requestFields = $this->getCatalogFields();
         $joinTables = self::CATALOG_JOIN_TABLES;
@@ -51,13 +50,16 @@ abstract class AbstractCatalogModel extends AbstractDefaultModel
             'JOIN'
         ];
         $dbResult =
-            $this->db->select($requestFields)->
-            from(['books_catalog'],$joinTables,$joinConditions,$joinTypes)->query()->fetchAll();
+            $this->db->select($requestFields)->from(
+                ['books_catalog'],
+                $joinTables,
+                $joinConditions,
+                $joinTypes
+            )->query()->fetchAll();
         if (!$dbResult) {
             $dbResult = null;
-            $this->msgModel->setMsg('empty', 'catalog', 'empty_catalog');
+            $this->msgModel->setMessage('empty', 'catalog', 'empty_catalog');
         }
-
 
         return $dbResult;
     }

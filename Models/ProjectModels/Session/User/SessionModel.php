@@ -22,4 +22,9 @@ class SessionModel extends AbstractSessionModel
 
         return self::$selfInstance;
     }
+
+    protected function setUserType(): void
+    {
+        $this->userType = 'user';
+    }
 }

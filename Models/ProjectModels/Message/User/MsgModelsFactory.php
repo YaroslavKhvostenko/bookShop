@@ -4,58 +4,71 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Message\User;
 
 use Models\AbstractProjectModels\Message\AbstractBaseMsgModel;
-use Models\ProjectModels\Message\User;
+use Models\AbstractProjectModels\Message\AbstractMsgModelsFactory;
 use Models\ProjectModels\Message\User\Admin;
 //use mysql_xdevapi\Exception;
 
-class MsgModelsFactory
+class MsgModelsFactory extends AbstractMsgModelsFactory
 {
     /**
-     * @param string $userType
+     * @param string $customerType
      * @param string|null $actionType
-     * @return AbstractBaseMsgModel|null
+     * @return AbstractBaseMsgModel
      * @throws \Exception
      */
-    public static function getMsgModel(string $userType, string $actionType = null): ?AbstractBaseMsgModel
+    public static function getMsgModel(string $customerType, string $actionType = null): AbstractBaseMsgModel
     {
-        if (strtolower($userType) === 'user') {
-            switch (strtolower($actionType)) {
-                case 'registration' :
-                    return new User\Registration\MsgModel();
-                case 'authorization' :
-                    return new User\Authorization\MsgModel();
-                case 'add' :
-                    return new User\Add\MsgModel();
-                case 'change' :
-                    return new User\Change\MsgModel();
-                case 'remove' :
-                    return new User\Remove\MsgModel();
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($userType) === 'admin') {
-            switch (strtolower($actionType)) {
-                case 'registration' :
-                    return new Admin\Registration\MsgModel();
-                case 'authorization' :
-                    return new Admin\Authorization\MsgModel();
-                case 'add' :
-                    return new Admin\Add\MsgModel();
-                case 'change' :
-                    return new Admin\Change\MsgModel();
-                case 'remove' :
-                    return new Admin\Remove\MsgModel();
-                default :
-                    throw new \Exception(
-                    "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                );
-            }
-        } elseif (strtolower($userType) === 'default') {
-            return new DefaultMsgModel();
-        } else {
-            throw new \Exception("UserType : '$userType' doesn't exist!");
+        $customerType = strtolower($customerType);
+        $className = 'MsgModel';
+        $nameSpace = self::NAME_SPACE . 'User' . self::isDefault($customerType);
+
+        switch ($customerType) {
+            case 'admin' :
+                $nameSpace .= 'Admin\\';
+                break;
+            case 'user' :
+                $nameSpace .= 'User\\';
+                break;
+            case 'guest' :
+                $nameSpace .= 'Guest\\';
+                break;
+            case 'guest_admin' :
+                $nameSpace .= 'GuestAdmin\\';
+                break;
+            case 'default' :
+                $className = 'DefaultMsgModel';
+                break;
+            default :
+                break;
         }
+
+        if (!is_null($actionType)) {
+            $actionType = strtolower($actionType);
+            switch ($actionType) {
+                case 'add' :
+                    $nameSpace .= 'Add';
+                    break;
+                case 'authorization' :
+                    $nameSpace .= 'Authorization';
+                    break;
+                case 'change' :
+                    $nameSpace .= 'Change';
+                    break;
+                case 'registration' :
+                    $nameSpace .= 'Registration';
+                    break;
+                case 'remove' :
+                    $nameSpace .= 'Remove';
+                    break;
+                default :
+                    break;
+            }
+        }
+
+        $classNameWithNamespace = self::createClassDirectoryPath($nameSpace, $className);
+
+        self::isClassExist($classNameWithNamespace);
+
+        return new $classNameWithNamespace();
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Validation\Data\Book\Admin\Add;
 
 use http\Exception\InvalidArgumentException;
-use Models\AbstractProjectModels\Validation\Data\Book\Add\AbstractValidator;
+use Models\AbstractProjectModels\Validation\Data\Book\Admin\Add\AbstractValidator;
 use Models\ProjectModels\Sql\MySql\MySqlDbWorkModel;
 
 class Validator extends AbstractValidator

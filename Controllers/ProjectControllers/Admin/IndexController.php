@@ -4,14 +4,14 @@ declare(strict_types=1);
 namespace Controllers\ProjectControllers\Admin;
 
 use Controllers\AbstractControllers\AbstractIndexController;
-use Models\ProjectModels\Admin\DefaultModel;
 use Views\ProjectViews\Admin\DefaultView;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class IndexController extends AbstractIndexController
 {
     public function __construct()
     {
-        parent::__construct(new DefaultModel(), new DefaultView());
+        parent::__construct(new DefaultView(), SessionModel::getInstance());
     }
 
     protected function prepareRedirect(string $url = null): void
@@ -21,6 +21,6 @@ class IndexController extends AbstractIndexController
 
     protected function validateRequest(): bool
     {
-        return $this->defaultModel->getSessModel()->isLogged() && !$this->defaultModel->getSessModel()->isAdmin();
+        return $this->sessionModel->isLoggedIn() && !$this->sessionModel->isAdmin();
     }
 }

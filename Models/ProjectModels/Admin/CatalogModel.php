@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Admin;
 
 use Models\AbstractProjectModels\AbstractCatalogModel;
-use Models\ProjectModels\Session\User\Admin\SessionModel;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class CatalogModel extends AbstractCatalogModel
 {

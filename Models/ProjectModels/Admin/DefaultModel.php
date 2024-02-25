@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Models\ProjectModels\Admin;
 
 use Models\AbstractProjectModels\AbstractDefaultModel;
-use Models\ProjectModels\Session\User\Admin\SessionModel;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class DefaultModel extends AbstractDefaultModel
 {

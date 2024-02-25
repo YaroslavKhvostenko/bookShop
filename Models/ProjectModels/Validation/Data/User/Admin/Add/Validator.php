@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Validation\Data\User\Admin\Add;
 
-use Models\AbstractProjectModels\Validation\Data\User\Add\AbstractValidator;
+use Models\AbstractProjectModels\Validation\Data\User\User\Add\AbstractValidator;
 
 class Validator extends AbstractValidator
 {

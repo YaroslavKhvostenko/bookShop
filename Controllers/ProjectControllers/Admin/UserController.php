@@ -6,12 +6,13 @@ namespace Controllers\ProjectControllers\Admin;
 use Models\ProjectModels\Admin\UserModel;
 use Views\ProjectViews\Admin\UserView;
 use Controllers\AbstractControllers\AbstractUserController;
+use Models\ProjectModels\Session\Admin\SessionModel;
 
 class UserController extends AbstractUserController
 {
     public function __construct()
     {
-        parent::__construct(new UserModel(), new UserView());
+        parent::__construct(new UserModel(), new UserView(), SessionModel::getInstance());
     }
 
     protected function redirectHome(): void
@@ -26,7 +27,7 @@ class UserController extends AbstractUserController
 
     protected function logoutByCustomerType(): void
     {
-        if ($this->userModel->getSessModel()->isAdmin()) {
+        if ($this->sessionModel->isAdmin()) {
             $this->userModel->logout();
             $this->redirectHome();
         } else {
@@ -36,6 +37,6 @@ class UserController extends AbstractUserController
 
     protected function validateRequester(): bool
     {
-        return !$this->userModel->getSessModel()->isAdmin();
+        return !$this->sessionModel->isAdmin();
     }
 }

@@ -3,30 +3,32 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Server;
 
+use http\Exception\InvalidArgumentException;
 use Interfaces\IDataManagement;
 //use mysql_xdevapi\Exception;
 
 class Manager implements IDataManagement
 {
     private array $data;
-    private const REQUEST = 'request';
-    private const REFERER = 'referer';
-    private const USER_TYPE = 'user_type';
-    private const ADMIN_TYPE = 'admin_type';
-    private const CONTROLLER = 'controller';
-    private const ACTION = 'action';
-    private const USER = 'user';
-    private const ADMIN = 'admin';
-    private const HEAD = 'head';
     private array $serverOptions = [
-        self::REQUEST => [],
-        self::REFERER => []
+        'request' => [],
+        'referer' => []
+    ];
+    private const ADMINS_AREA = [
+        'admin',
+        'head'
+    ];
+    private const SERVER_STRINGS = [
+        'request',
+        'referer'
+    ];
+    private const SERVER_OPTIONS = [
+        'request' => self::REQUEST_OPTIONS,
+        'referer' => self::REFERER_OPTIONS
     ];
     private const REQUEST_OPTIONS = [
-        self::USER_TYPE => self::USER_TYPE,
-        self::CONTROLLER => self::CONTROLLER,
-        self::ACTION => self::ACTION,
-        self::ADMIN_TYPE => self::ADMIN_TYPE
+        'controller',
+        'action'
     ];
     private const REFERER_OPTIONS = self::REQUEST_OPTIONS;
 
@@ -40,116 +42,161 @@ class Manager implements IDataManagement
         return $this->data['REQUEST_URI'];
     }
 
-    public function getReferer(): string
+    public function getRefererUri(): string
     {
         return $this->data['HTTP_REFERER'];
     }
 
     /**
-     * @param string $stringUriType
-     * @throws \Exception
-     */
-    public function initializeServerUriOptions(string $stringUriType): void
-    {
-        if (!array_key_exists($stringUriType, $this->serverOptions)) {
-            throw new \Exception('Wrong server URI type, check Server/Manager!');
-        }
-
-        if (empty($this->serverOptions[$stringUriType])) {
-                $this->setServerUriOptions($stringUriType);
-        }
-    }
-
-    private function setServerUriOptions(string $serverUriType): void
-    {
-        if ($serverUriType === self::REQUEST) {
-            $result = $this->splitUriString($this->getRequestUri());
-        } else {
-            $result = $this->splitUriString(parse_url($this->getReferer(), PHP_URL_PATH));
-        }
-
-        $options = [];
-        if (!isset($result[0])) {
-            return;
-        }
-
-        if (strtolower($result[0]) === self::ADMIN) {
-            if (strtolower($result[1]) === self::HEAD) {
-                $options[self::USER_TYPE] = $result[0];
-                $options[self::ADMIN_TYPE] = $result[1] . '_' . self::ADMIN;
-                if (isset($result[2])) {
-                    $options[self::CONTROLLER] = $result[2];
-                }
-
-                if (isset($result[3])) {
-                    $options[self::ACTION] = $result[3];
-                }
-            } else {
-                $options[self::USER_TYPE] = $result[0];
-                $options[self::ADMIN_TYPE] = $result[0];
-                if (isset($result[1])) {
-                    $options[self::CONTROLLER] = $result[1];
-                }
-
-                if (isset($result[2])) {
-                    $options[self::ACTION] = $result[2];
-                }
-            }
-        } else {
-            $options[self::USER_TYPE] = self::USER;
-            $options[self::CONTROLLER] = $result[0];
-            if (isset($result[1])) {
-                $options[self::ACTION] = $result[1];
-            }
-        }
-
-        $this->serverOptions[$serverUriType] = $this->lowerCase($options);
-    }
-
-    /**
-     * @param string $requestOption
+     * @param string $uriType
+     * @param string $option
      * @return string
      * @throws \Exception
      */
-    public function getRequestOption(string $requestOption): string
+    private function getOption(string $uriType, string $option): string
     {
-        if (!array_key_exists($requestOption, self::REQUEST_OPTIONS) ||
-            !array_key_exists($requestOption, self::REFERER_OPTIONS)) {
-            throw new \Exception('Wrong name of server option: ' . "'$requestOption'!");
+        if (!in_array($uriType, self::SERVER_STRINGS)) {
+            throw new InvalidArgumentException(
+                'Undefined server type string : ' . '\'' . $uriType . '\'' .
+                ', please check the correctness of server type string title, ' .
+                'or does it exist in const SERVER_STRINGS!'
+            );
         }
 
-        if (!array_key_exists($requestOption, $this->serverOptions[self::REQUEST])) {
-            $this->initializeServerUriOptions(self::REQUEST);
+        if (!in_array($option, self::SERVER_OPTIONS[$uriType])) {
+            throw new InvalidArgumentException(
+                'Undefined server option title : ' . '\'' . $option . '\'' .
+                ', please check the correctness of server option title, ' .
+                'or does it exist in const SERVER_OPTIONS[' . '\'' . $uriType . '\'' . ']'
+            );
         }
 
-        return $this->serverOptions[self::REQUEST][strtolower($requestOption)];
+        if (empty($this->serverOptions[$uriType])) {
+            $this->initializeData($uriType);
+        }
+
+        if ($this->serverOptions[$uriType] === 'action' && is_null($this->serverOptions[$uriType]['action'])) {
+            throw new \Exception(
+                'You can\'t use action option from ' . $uriType . ' string, ' .
+                'because it doesn\'t exist in provided ' . $uriType . ' string! ' .
+                'Probably it was IndexAction!'
+            );
+        }
+
+        return $this->serverOptions[$uriType][$option];
     }
 
     /**
-     * @param string $refererOption
+     * @param string $uriType
+     * @throws \Exception
+     */
+    private function initializeData(string $uriType): void
+    {
+        if ($uriType === 'referer') {
+            $uriString = parse_url($this->getRefererUri(), PHP_URL_PATH);
+        } else {
+            $uriString = $this->getRequestUri();
+        }
+
+        $result = $this->splitString($uriString);
+        if (empty($result[0]) || (in_array($result[0], self::ADMINS_AREA) && !isset($result[1]))) {
+            throw new \Exception(
+                'You can\'t use options data from server ' . $uriType . ' string, ' .
+                'because server ' . $uriType . ' string is empty!'
+            );
+        }
+
+        if (in_array($result[0], self::ADMINS_AREA)) {
+            array_shift($result);
+        }
+
+        $options['controller'] = $result[0];
+        $options['action'] = $result[1] ?? null;
+        $this->serverOptions[$uriType] = $this->lowerCase($options);
+    }
+
+    /**
      * @return string
      * @throws \Exception
      */
-    public function getRefererOption(string $refererOption): string
+    public function getRequestController(): string
     {
-        if (!array_key_exists($refererOption, $this->serverOptions[self::REFERER])) {
-            $this->initializeServerUriOptions(self::REFERER);
-        }
-
-        return $this->serverOptions[self::REFERER][strtolower($refererOption)];
+        return $this->getRequestOption('controller');
     }
 
-    private function splitUriString(string $string): array
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getRequestAction(): string
     {
-        return explode('/', trim($string, '/'));
+        return $this->getRequestOption('action');
+    }
+
+    /**
+     * @param string $option
+     * @return string
+     * @throws \Exception
+     */
+    private function getRequestOption(string $option): string
+    {
+        return $this->getOption('request', $option);
+    }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getRefererController(): string
+    {
+        return $this->getRefererOption('controller');
+    }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getRefererAction(): string
+    {
+        return $this->getRefererOption('action');
+    }
+
+    /**
+     * @param string $option
+     * @return string
+     * @throws \Exception
+     */
+    private function getRefererOption(string $option): string
+    {
+        return $this->getOption('referer', $option);
+    }
+
+    /**
+     * @param string $uriString
+     * @return array
+     */
+    public function splitString(string $uriString): array
+    {
+        $splits = explode('/', trim($uriString, '/'));
+        $result = [];
+        foreach ($splits as $uriParam) {
+            $result[] = trim($uriParam);
+        }
+
+        return $result;
     }
 
     private function lowerCase(array $data): array
     {
         foreach ($data as $field => $value) {
-            $data[$field] = strtolower($value);
+            $data[$field] = !is_null($value) ? strtolower($value) : $value;
         }
 
         return $data;
+    }
+
+    public function isAdminArea(string $area): bool
+    {
+        return in_array($area, self::ADMINS_AREA);
     }
 }

@@ -14,6 +14,7 @@ class FrontController
 {
     protected string $controller;
     protected string $action;
+    private array $splits;
     protected ?array $params = null;
     private ?Logger $logger = null;
     private IDataManagement $serverInfo;
@@ -58,51 +59,47 @@ class FrontController
 
     public function start(): void
     {
-        $splits = explode('/', trim($this->getRequest(), '/'));
-
-        if (ucfirst($splits[0]) === 'Admin') {
-            if (!empty($splits[1]) && ucfirst($splits[1]) === 'Head') {
-                $this->controller = !empty($splits[2]) ?
-                    $this->getFullControllerName('Admin\\Head\\' . ucfirst($splits[2]) . 'Controller')
-                    : $this->getFullControllerName('Admin\\Head\\IndexController');
-                $this->action = !empty($splits[3]) ? $splits[3] . 'Action' : 'indexAction';
-                if (!empty($splits[4])) {
-                    for ($i = 4, $count = count($splits); $i < $count; $i++) {
-                        $this->params[] = $splits[$i];
-                    }
-                }
-            } else {
-                $this->controller = !empty($splits[1]) ?
-                    $this->getFullControllerName('Admin\\' . ucfirst($splits[1]) . 'Controller')
-                    : $this->getFullControllerName('Admin\\IndexController');
-                $this->action = !empty($splits[2]) ? $splits[2] . 'Action' : 'indexAction';
-                if (!empty($splits[3])) {
-                    for ($i = 3, $count = count($splits); $i < $count; $i++) {
-                        $this->params[] = $splits[$i];
-                    }
-                }
-            }
+        $this->splits = $this->serverInfo->splitString($this->serverInfo->getRequestUri());
+        if ($this->serverInfo->isAdminArea($this->splits[0])) {
+            $this->setFullControllerName(
+                ucfirst($this->splits[0]) . '\\' . ucfirst($this->getControllerName(1))
+            );
+            $this->setActionName(2);
+            $this->formatParamsData(3);
         } else {
-            $this->controller = !empty($splits[0]) ?
-                $this->getFullControllerName(ucfirst($splits[0]) . 'Controller')
-                : $this->getFullControllerName('IndexController');
-            $this->action = !empty($splits[1]) ? $splits[1] . 'Action' : 'indexAction';
-            if (!empty($splits[2])) {
-                for ($i = 2, $count = count($splits); $i < $count; $i++) {
-                    $this->params[] = $splits[$i];
-                }
+            $this->setFullControllerName(ucfirst($this->getControllerName(0)));
+            $this->setActionName(1);
+            $this->formatParamsData(2);
+        }
+    }
+
+    private function getControllerName(int $indexNumber): string
+    {
+        $this->controller = !empty($this->splits[$indexNumber])
+            ? ucfirst($this->splits[$indexNumber]) . 'Controller'
+            : 'IndexController';
+
+        return $this->controller;
+    }
+
+    private function setActionName(int $indexNumber): void
+    {
+        $this->action = (!isset($this->splits[$indexNumber]) || empty($this->splits[$indexNumber]))
+            ? 'indexAction' : $this->splits[$indexNumber] . 'Action';
+    }
+
+    private function formatParamsData(int $indexCounter): void
+    {
+        if (!empty($this->splits[$indexCounter])) {
+            for ($i = $indexCounter, $count = count($this->splits); $i < $count; $i++) {
+                $this->params[] = $this->splits[$i];
             }
         }
     }
 
-    public function getRequest(): string
+    private function setFullControllerName(string $name): void
     {
-        return $this->serverInfo->getRequestUri();
-    }
-
-    private function getFullControllerName(string $name): string
-    {
-        return '\Controllers\\ProjectControllers\\' . $name;
+        $this->controller = '\Controllers\\ProjectControllers\\' . $name;
     }
 
     public function ErrorPage404(): void

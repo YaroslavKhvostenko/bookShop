@@ -5,8 +5,7 @@ namespace Views\ProjectViews\Admin;
 
 use http\Exception\InvalidArgumentException;
 use Views\AbstractViews\AbstractBookView;
-use Models\ProjectModels\Session\User\Admin\SessionModel as AdminSessModel;
-use Models\ProjectModels\Session\Message\SessionModel as MsgSessModel;
+use Models\ProjectModels\Session\Admin\SessionModel as AdminSessModel;
 
 class BookView extends AbstractBookView
 {
@@ -45,7 +44,7 @@ class BookView extends AbstractBookView
 
     public function __construct()
     {
-        parent::__construct(MsgSessModel::getInstance(), AdminSessModel::getInstance());
+        parent::__construct(AdminSessModel::getInstance());
     }
 
     public function setParam(string $param): void
@@ -60,7 +59,6 @@ class BookView extends AbstractBookView
 
     public function getTitle(string $actionName): ?string
     {
-        $actionName = $this->getRequestAction();
         if (array_key_exists($actionName, self::TITLES)) {
             if (!array_key_exists($this->param, self::TITLES[$actionName])) {
                 throw new InvalidArgumentException(
@@ -92,7 +90,7 @@ class BookView extends AbstractBookView
 
     private function getFieldValue(): ?string
     {
-        $actionName = $this->getRequestAction();
+        $actionName = $this->serverInfo->getRequestAction();
         if (array_key_exists($actionName, self::FIELD_VALUES)) {
             if (!array_key_exists($this->param, self::FIELD_VALUES[$actionName])) {
                 throw new InvalidArgumentException(
@@ -133,12 +131,12 @@ class BookView extends AbstractBookView
 
     protected function getContentPath(): string
     {
-        return parent::getContentPath() . self::ADMIN_LAYOUTS;
+        return parent::getContentPath() . $this->getAdminLayouts();
     }
 
     protected function getHeaderPath(): string
     {
-        return parent::getHeaderPath() . self::ADMIN_LAYOUTS;
+        return parent::getHeaderPath() . $this->getAdminLayouts();
     }
 
     public function getLabelData(string $actionName): string
@@ -158,5 +156,10 @@ class BookView extends AbstractBookView
         }
 
         return self::LABELS_DATA[$actionName][$this->param];
+    }
+
+    protected function getAdminLayouts(): string
+    {
+        return self::ADMIN_LAYOUTS;
     }
 }

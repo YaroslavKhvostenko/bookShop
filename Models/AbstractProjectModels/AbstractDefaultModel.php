@@ -14,6 +14,7 @@ abstract class AbstractDefaultModel
     protected ?IDataManagement $fileInfo = null;
     protected ?AbstractBaseMsgModel $msgModel = null;
     protected ?Logger $logger = null;
+    protected IDataManagement $serverInfo;
     protected AbstractSessionModel $sessionModel;
 
     /**
@@ -23,6 +24,7 @@ abstract class AbstractDefaultModel
     public function __construct(AbstractSessionModel $sessionModel)
     {
         $this->sessionModel = $sessionModel;
+        $this->serverInfo = DataRegistry::getInstance()->get('server');
     }
 
     /**
@@ -89,7 +91,7 @@ abstract class AbstractDefaultModel
         return $this->fileInfo;
     }
 
-    public function setMsgModel(AbstractBaseMsgModel $msgModel): void
+    public function setMessageModel(AbstractBaseMsgModel $msgModel): void
     {
         if (!$this->msgModel) {
             $this->msgModel = $msgModel;
@@ -108,10 +110,5 @@ abstract class AbstractDefaultModel
         }
 
         return $this->logger;
-    }
-
-    public function getSessModel() :AbstractSessionModel
-    {
-        return $this->sessionModel;
     }
 }

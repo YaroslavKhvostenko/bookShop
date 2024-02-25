@@ -3,38 +3,52 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Message\Book;
 
+use Models\AbstractProjectModels\Message\AbstractMsgModelsFactory;
 use Models\AbstractProjectModels\Message\Book\AbstractBaseMsgModel;
-use Models\ProjectModels\Message\Book\Add;
 //use mysql_xdevapi\Exception;
 
-class MsgModelsFactory
+class MsgModelsFactory extends AbstractMsgModelsFactory
 {
     /**
-     * @param string $userType
+     * @param string $customerType
      * @param string|null $actionType
-     * @return AbstractBaseMsgModel|null
+     * @return AbstractBaseMsgModel
      * @throws \Exception
      */
-    public static function getMsgModel(string $userType, string $actionType = null): AbstractBaseMsgModel
+    public static function getMsgModel(string $customerType, string $actionType = null): AbstractBaseMsgModel
     {
-        if (strtolower($userType) === 'user') {
-            switch (strtolower($actionType)) {
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($userType) === 'admin') {
-            switch (strtolower($actionType)) {
-                case 'add' :
-                    return new Add\Admin\MsgModel();
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $userType" . 'Controller' . " doesn't exist!"
-                    );
-            }
-        }  else {
-            throw new \Exception("UserType : '$userType' doesn't exist!");
+        $customerType = strtolower($customerType);
+        $className = 'MsgModel';
+        $nameSpace = self::NAME_SPACE . 'Book' . self::isDefault($customerType);
+
+        switch ($customerType) {
+            case 'admin' :
+                $nameSpace .= 'Admin\\';
+                break;
+            case 'user' :
+                $nameSpace .= 'User\\';
+                break;
+            case 'default' :
+                $className = 'DefaultMsgModel';
+                break;
+            default :
+                break;
         }
+
+        if (!is_null($actionType)) {
+            $actionType = strtolower($actionType);
+            switch ($actionType) {
+                case 'add':
+                    $nameSpace .= 'Add';
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        $classNameWithNamespace = self::createClassDirectoryPath($nameSpace, $className);
+        self::isClassExist($classNameWithNamespace);
+
+        return new $classNameWithNamespace();
     }
 }

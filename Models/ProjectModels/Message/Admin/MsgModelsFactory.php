@@ -3,49 +3,64 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Message\Admin;
 
+use Models\AbstractProjectModels\Message\AbstractMsgModelsFactory;
 use Models\AbstractProjectModels\Message\Admin\AbstractBaseMsgModel;
-use Models\ProjectModels\Message\Admin\Head\Administrate;
-use Models\ProjectModels\Message\Admin\Head\Provide;
-use Models\ProjectModels\Message\Admin\Head\Redirect;
-use Models\ProjectModels\Message\Admin\Head\Remove;
 //use mysql_xdevapi\Exception;
 
-class MsgModelsFactory
+class MsgModelsFactory extends AbstractMsgModelsFactory
 {
     /**
-     * @param string $adminType
+     * @param string $customerType
      * @param string|null $actionType
      * @return AbstractBaseMsgModel
      * @throws \Exception
      */
-    public static function getMsgModel(string $adminType, string $actionType = null): AbstractBaseMsgModel
+    public static function getMsgModel(string $customerType, string $actionType = null): AbstractBaseMsgModel
     {
-        if (strtolower($adminType) === 'head_admin') {
-            switch (strtolower($actionType)) {
-                case 'administrate' :
-                    return new Administrate\MsgModel();
-                case 'provide' :
-                    return new Provide\MsgModel();
-                case 'redirect' :
-                    return new Redirect\MsgModel();
-                case 'remove' :
-                    return new Remove\MsgModel();
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $adminType" . 'AdminController' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($adminType) === 'admin') {
-            switch (strtolower($actionType)) {
-                default :
-                    throw new \Exception(
-                        "ActionType : '$actionType' in $adminType/ " . 'AdminController' . " doesn't exist!"
-                    );
-            }
-        } elseif (strtolower($adminType) === 'default') {
-            return new DefaultMsgModel();
-        } else {
-            throw new \Exception("AdminType : '$adminType' doesn't exist!");
+        $customerType = strtolower($customerType);
+        $className = 'MsgModel';
+        $nameSpace = self::NAME_SPACE . 'Admin' . self::isDefault($customerType);
+
+        switch ($customerType) {
+            case 'head_admin' :
+                $nameSpace .= 'Head\\';
+                break;
+            case 'admin' :
+                $nameSpace .= 'Admin\\';
+                break;
+            case 'default' :
+                $className = 'DefaultMsgModel';
+                break;
+            default :
+                break;
         }
+
+        if (!is_null($actionType)) {
+            $actionType = strtolower($actionType);
+            switch ($actionType) {
+                case 'administrate':
+                    $nameSpace .= 'Administrate';
+                    break;
+                case 'provide':
+                    $nameSpace .= 'Provide';
+                    break;
+                case 'redirect':
+                    $nameSpace .= 'Redirect';
+                    break;
+                case 'remove':
+                    $nameSpace .= 'Remove';
+                    break;
+                case 'task':
+                    $nameSpace .= 'Task';
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        $classNameWithNamespace = self::createClassDirectoryPath($nameSpace, $className);
+        self::isClassExist($classNameWithNamespace);
+
+        return new $classNameWithNamespace();
     }
 }

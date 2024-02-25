@@ -8,23 +8,11 @@ use Models\AbstractProjectModels\Session\AbstractSessionModel as BaseSessionMode
 abstract class AbstractSessionModel extends BaseSessionModel
 {
     protected const SESS_FIELD = 'user';
-    protected array $dataFields = [];
-    private const DATA_FIELDS = [
-        'id' => 'id',
-        'login' => 'login',
-        'name' => 'name',
-        'birthdate' => 'birthdate',
-        'email' => 'email',
-        'phone' => 'phone',
-        'address' => 'address',
-        'image' => 'image',
-        'is_active' => 'is_active'
-    ];
+    protected string $userType = 'guest';
 
     protected function __construct()
     {
         parent::__construct();
-        $this->dataFields = self::DATA_FIELDS;
     }
 
     public static function getInstance(): AbstractSessionModel
@@ -32,12 +20,12 @@ abstract class AbstractSessionModel extends BaseSessionModel
         return static::createSelf();
     }
 
-    public function getUserData(): ?array
+    public function getCustomerData(): ?array
     {
         return $this->data;
     }
 
-    public function setUserData(array $userData): void
+    public function setCustomerData(array $userData): void
     {
         $userData = array_filter(
             $userData,
@@ -53,7 +41,7 @@ abstract class AbstractSessionModel extends BaseSessionModel
         }
     }
 
-    public function isLogged(): bool
+    public function isLoggedIn(): bool
     {
         return $this->data !== null;
     }
@@ -68,10 +56,19 @@ abstract class AbstractSessionModel extends BaseSessionModel
         $this->sessionInfo->destroySession();
     }
 
-    public function deleteUserData(string $fieldName): void
+    public function deleteCustomerData(string $fieldName): void
     {
         $this->deleteData(self::getSessField(), $fieldName);
     }
 
+    public function getUserType(): string
+    {
+        if ($this->isLoggedIn()) {
+            $this->setUserType();
+        }
 
+        return $this->userType;
+    }
+
+    abstract protected function setUserType(): void;
 }

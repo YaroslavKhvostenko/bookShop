@@ -5,9 +5,8 @@ namespace Models\ProjectModels\Admin;
 
 use http\Exception\InvalidArgumentException;
 use Models\AbstractProjectModels\AbstractBookModel;
-use Models\ProjectModels\Session\User\Admin\SessionModel;
+use Models\ProjectModels\Session\Admin\SessionModel;
 use Interfaces\IDataManagement;
-use Models\ProjectModels\DataRegistry;
 
 class BookModel extends AbstractBookModel
 {
@@ -67,7 +66,7 @@ class BookModel extends AbstractBookModel
             $requestFields = $this->getRequestFields(self::ADD_METHOD, $tableName);
             $dbResult = $this->db->select($requestFields)->from([$tableName])->query()->fetchAll();
             if (!$dbResult) {
-                $this->msgModel->setMsg('empty', 'no_' . $tableName, $tableName);
+                $this->msgModel->setMessage('empty', 'no_' . $tableName, $tableName);
             }
 
             $data = $dbResult;
@@ -114,10 +113,10 @@ class BookModel extends AbstractBookModel
         }
 
         $this->setDbMsgModel();
-        $dbResult = $this->db->select(['id'])->
-            from([$this->getTableName($param)])->condition($conditionData)->query()->fetchAll();
+        $dbResult = $this->db->select(['id'])->from([$this->getTableName($param)])
+            ->condition($conditionData)->query()->fetchAll();
         if ($dbResult) {
-            $this->msgModel->setMsg('failure', $param . '_exist', $param . '_exist');
+            $this->msgModel->setMessage('failure', $param . '_exist', $param . '_exist');
 
             return false;
         }
@@ -127,7 +126,7 @@ class BookModel extends AbstractBookModel
                 'Failure to add new ' . $param . ', check what comes in sql string!'
             );
         } else {
-            $this->msgModel->setMsg('success', $param, $param);
+            $this->msgModel->setMessage('success', $param, $param);
         }
 
         return true;
@@ -152,19 +151,6 @@ class BookModel extends AbstractBookModel
         }
     }
 
-    /**
-     * @return IDataManagement
-     * @throws \Exception
-     */
-    protected function getFileInfo(): IDataManagement
-    {
-        if (!$this->fileInfo) {
-            $this->fileInfo = DataRegistry::getInstance()->get('file');
-        }
-
-        return $this->fileInfo;
-    }
-
     protected function getTableName(string $param): ?string
     {
         if (!array_key_exists($param, self::TABLE_NAMES)) {
@@ -177,30 +163,21 @@ class BookModel extends AbstractBookModel
         return self::TABLE_NAMES[$param];
     }
 
-    protected function getRequestFields(string $methodName, $tableName): ?array
+    protected function getRequestFields(string $methodName, string $tableName): ?array
     {
-        if (array_key_exists($methodName, self::REQUEST_FIELDS)) {
-            if (!array_key_exists($tableName, self::REQUEST_FIELDS[$methodName])) {
-                throw new InvalidArgumentException(
-                    'Wrong table name : ' . "'$tableName'" .
-                    ', during choosing fields from const REQUEST_FIELDS to request them from DB!
-                    Check this const or what comes here!'
-                );
-            }
-        } else {
+        if (!array_key_exists($methodName, self::REQUEST_FIELDS)) {
             throw new InvalidArgumentException(
-                'Wrong method name : ' . "'$methodName'" .
-                ', during choosing fields from const REQUEST_FIELDS to request them from DB!
-                Check this const or what comes here!'
+                "Invalid method name: '$methodName'."
+            );
+        }
+
+        if (!array_key_exists($tableName, self::REQUEST_FIELDS[$methodName])) {
+            throw new InvalidArgumentException(
+                "Invalid table name: '$tableName' for method: '$methodName'."
             );
         }
 
         return self::REQUEST_FIELDS[$methodName][$tableName];
-    }
-
-    protected function setDbMsgModel(): void
-    {
-        $this->db->setMsgModel($this->msgModel);
     }
 
     /**
@@ -213,55 +190,8 @@ class BookModel extends AbstractBookModel
     {
         foreach ($result as $field => $value) {
             if ($value == $boolType) {
-                $this->msgModel->setMsg($messagesType, $field, $field);
+                $this->msgModel->setMessage($messagesType, $field, $field);
             }
         }
-    }
-
-    /**
-     * @param string $option
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRefererOption(string $option): string
-    {
-        return $this->getServerInfo()->getRefererOption($option);
-    }
-
-    /**
-     * @param string $option
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestOption(string $option): string
-    {
-        return $this->getServerInfo()->getRequestOption($option);
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestController(): string
-    {
-        return $this->getRequestOption('controller');
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRequestAction(): string
-    {
-        return $this->getRequestOption('action');
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    protected function getRefererAction(): string
-    {
-        return $this->getRefererOption('action');
     }
 }

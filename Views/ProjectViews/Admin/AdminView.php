@@ -3,12 +3,13 @@ declare(strict_types=1);
 
 namespace Views\ProjectViews\Admin;
 
-use Views\AbstractViews\AbstractAdminView;
+use Models\ProjectModels\Session\Admin\SessionModel;
+use Views\AbstractViews\Admin\AbstractAdminView;
 
 class AdminView extends AbstractAdminView
 {
-    protected function getAdminPath(): string
+    public function __construct()
     {
-        return self::ADMIN_LAYOUTS;
+        parent::__construct(SessionModel::getInstance());
     }
 }

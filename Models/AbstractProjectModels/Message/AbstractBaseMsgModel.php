@@ -45,7 +45,7 @@ abstract class AbstractBaseMsgModel
      * @return string
      * @throws \Exception
      */
-    public function getMessage(string $messagesType, string $msgType = null): string
+    protected function getMessage(string $messagesType, string $msgType = null): string
     {
         if (!array_key_exists($messagesType, $this->messages)) {
             throw new \Exception('Message for \'messagesType\' - \'' . $messagesType . '\' does not exist!');
@@ -63,7 +63,7 @@ abstract class AbstractBaseMsgModel
      * @param string|null $fieldName
      * @throws \Exception
      */
-    public function setMsg(string $messagesType, string $msgType = null, string $fieldName = null): void
+    public function setMessage(string $messagesType, string $msgType = null, string $fieldName = null): void
     {
         $this->getSessionModel()->setMessage($this->getMessage($messagesType, $msgType), $fieldName);
     }
@@ -80,7 +80,7 @@ abstract class AbstractBaseMsgModel
     public function setErrorMsg(string $errorType = self::DEFAULT): void
     {
         $this->deleteAllMessages();
-        $this->setMsg(self::PROJECT, $errorType, $errorType);
+        $this->setMessage(self::PROJECT, $errorType, $errorType);
     }
 
     protected function getSessionModel(): AbstractSessionModel

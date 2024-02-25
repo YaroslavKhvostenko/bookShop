@@ -3,31 +3,23 @@ declare(strict_types=1);
 
 namespace Models\AbstractProjectModels;
 
-use Interfaces\IDataManagement;
 use Models\AbstractProjectModels\Session\User\AbstractSessionModel;
-use Models\ProjectModels\DataRegistry;
 use Models\ProjectModels\Sql\MySql\MySqlDbWorkModel;
 //use mysql_xdevapi\Exception;
 
 abstract class AbstractUserModel extends AbstractDefaultModel
 {
-    protected const USER_TYPE = 'user_type';
-    protected const CUSTOMER = 'user_type';
-    protected const CONTROLLER = 'controller';
-    protected const ACTION = 'action';
     private const CUSTOMER_DB_TABLE = 'users';
     protected const FILE_ERR = 'file';
     protected array $user = [];
     protected array $oldData;
     protected array $newData;
-    protected IDataManagement $serverInfo;
     protected MySqlDbWorkModel $db;
 
     public function __construct(AbstractSessionModel $sessionModel)
     {
         parent::__construct($sessionModel);
         $this->db = MySqlDbWorkModel::getInstance();
-        $this->serverInfo = DataRegistry::getInstance()->get('server');
     }
 
     /**
@@ -39,17 +31,19 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     {
         $conditionData = $this->formatArrayData(['login', 'email', 'phone'], $data);
         $andOr = count($conditionData) === 3 ? ['OR', 'OR'] : ['OR'];
-        $dbResult = $this->db->select(['id'])
-                        ->from([$this->getCustomerTable()])->condition($conditionData, $andOr)->query()->fetchAll();
+        $dbResult = $this->db->select(['id'])->from([$this->getCustomerTable()])->condition(
+            $conditionData,
+            $andOr
+        )->query()->fetchAll();
         if ($dbResult) {
-            $this->msgModel->setMsg('failure', 'user', 'user');
+            $this->msgModel->setMessage('failure', 'user', 'user');
 
             return false;
         }
 
         if ($this->getFileInfo()->isFileSent('image')) {
             $data['image'] = $this->createUniqueFileName('image');
-            if (!$this->moveUploadFile('image', $this->getRefererUserType(), $data['image'])) {
+            if (!$this->moveUploadFile('image', $this->sessionModel->getUserType(), $data['image'])) {
                 $this->msgModel->setErrorMsg('file');
 
                 return false;
@@ -60,7 +54,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
 
         if (!$this->db->insertData($this->getCustomerTable(), $data)) {
             if ($this->getFileInfo()->isFileSent('image')) {
-                $this->deleteFile('image', $this->getRefererUserType(), $data['image']);
+                $this->deleteFile('image', $this->sessionModel->getUserType(), $data['image']);
             }
             $this->msgModel->setErrorMsg();
 
@@ -68,9 +62,9 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         } else {
             $data['id'] = $this->db->getLastInsertedId();
             $data = $this->setDbSpecialFieldsData($data);
-            $this->sessionModel->setUserData($data);
-            $this->msgModel->setMsg(
-                'success', 'success_' . $this->getRefererAction(), 'user'
+            $this->sessionModel->setCustomerData($data);
+            $this->msgModel->setMessage(
+                'success', 'success_' . $this->serverInfo->getRefererAction(), 'user'
             );
 
             return true;
@@ -84,26 +78,6 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         return $data;
     }
 
-//    /**
-//     * @param string $tableName
-//     * @param array $requestFields
-//     * @param array|null $conditionData
-//     * @return bool
-//     * @throws \Exception
-//     */
-//    public function userExist(string $tableName, array $requestFields, array $conditionData = null): bool
-//    {
-//        $this->setDbMsgModel();
-//        $result = $this->db->selectData($tableName, $requestFields, $conditionData);
-//        if (isset($result[0])) {
-//            $this->user = $result[0];
-//
-//            return true;
-//        }
-//
-//        return false;
-//    }
-
     /**
      * @param array $data
      * @return bool
@@ -113,10 +87,10 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     {
         $conditionData = $this->formatArrayData(['login'], $data);
         $requestFields = $this->getUserFields();
-        $dbResult = $this->db->select($requestFields)
-                ->from([$this->getCustomerTable()])->condition($conditionData)->query()->fetch();
+        $dbResult = $this->db->select($requestFields)->from([$this->getCustomerTable()])
+            ->condition($conditionData)->query()->fetch();
         if (!$dbResult) {
-            $this->msgModel->setMsg('failure', 'user', 'user');
+            $this->msgModel->setMessage('failure', 'user', 'user');
 
             return false;
         }
@@ -128,14 +102,14 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         }
 
         if ($this->getUser()['is_active'] === '1') {
-            $this->sessionModel->setUserData($this->getUser());
-            $this->msgModel->setMsg(
-                'success', 'success_' . $this->getRefererAction(), 'user'
+            $this->sessionModel->setCustomerData($this->getUser());
+            $this->msgModel->setMessage(
+                'success', 'success_' . $this->serverInfo->getRefererAction(), 'user'
             );
 
             return true;
         } else {
-            $this->msgModel->setMsg('failure', 'not_active', 'user');
+            $this->msgModel->setMessage('failure', 'not_active', 'user');
 
             return false;
         }
@@ -171,7 +145,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     protected function passwordVerify(string $userPass, string $adminPass = null): bool
     {
         if (!password_verify($userPass, $this->getUser()['pass'])) {
-            $this->msgModel->setMsg('failure', 'pass', 'pass'
+            $this->msgModel->setMessage('failure', 'pass', 'pass'
             );
 
             return false;
@@ -201,8 +175,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
             'address',
             'image'
         ];
-        $dbResult = $this->db->select($requestFields)
-            ->from([$this->getCustomerTable()])->condition($this->getUserId())->query()->fetch();
+        $dbResult = $this->db->select($requestFields)->from([$this->getCustomerTable()])
+            ->condition($this->getUserId())->query()->fetch();
         if (!$dbResult) {
             $this->msgModel->setErrorMsg();
 
@@ -257,7 +231,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
                 case 'phone' :
                 case 'address' :
                 case 'image' :
-                    $result = $this->formatArrayData([$requestField], $this->sessionModel->getUserData());
+                    $result = $this->formatArrayData([$requestField], $this->sessionModel->getCustomerData());
                     break;
                 default :
                     throw new \Exception('Field :' . "'$requestField'" . 'doesn\'t exist!');
@@ -283,14 +257,14 @@ abstract class AbstractUserModel extends AbstractDefaultModel
             $dbResult = $this->db->select(['id'])
                 ->from([$this->getCustomerTable()])->condition($data)->query()->fetch();
             if ($dbResult) {
-                $this->msgModel->setMsg('failure', 'exist_' . $fieldName);
+                $this->msgModel->setMessage('failure', 'exist_' . $fieldName);
 
                 return;
             }
         }
 
         if ($fieldName !== 'pass') {
-            $this->oldData[$fieldName] = $this->sessionModel->getUserData()[$fieldName];
+            $this->oldData[$fieldName] = $this->sessionModel->getCustomerData()[$fieldName];
             $this->newData[$fieldName] = $data[$fieldName];
         } else {
             unset($data['old_pass']);
@@ -302,8 +276,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         if (!$dbResult) {
             $this->msgModel->setErrorMsg();
         } else {
-            $this->sessionModel->setUserData($this->newData);
-            $this->msgModel->setMsg('success', $fieldName, $fieldName);
+            $this->sessionModel->setCustomerData($this->newData);
+            $this->msgModel->setMessage('success', $fieldName, $fieldName);
         }
     }
 
@@ -315,10 +289,10 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     public function newItemText(string $fieldName, array $data): void
     {
         if ($fieldName === 'phone') {
-            $dbResult = $this->db->select(['id'])
-                ->from([$this->getCustomerTable()])->condition($data)->query()->fetch();
+            $dbResult = $this->db->select(['id'])->from([$this->getCustomerTable()])
+                ->condition($data)->query()->fetch();
             if ($dbResult) {
-                $this->msgModel->setMsg('failure', $fieldName, $fieldName);
+                $this->msgModel->setMessage('failure', $fieldName, $fieldName);
 
                 return;
             }
@@ -330,8 +304,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         if (!$dbResult) {
             $this->msgModel->setErrorMsg();
         } else {
-            $this->sessionModel->setUserData($this->newData);
-            $this->msgModel->setMsg($this->msgModel->getMessage('success', $fieldName), $fieldName);
+            $this->sessionModel->setCustomerData($this->newData);
+            $this->msgModel->setMessage('success', $fieldName, $fieldName);
         }
     }
 
@@ -344,15 +318,15 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     private function selfDataCheck(string $fieldName, array $data): bool
     {
         if ($fieldName === 'pass') {
-            $dbResult = $this->db->select([$fieldName])
-                ->from([$this->getCustomerTable()])->condition($this->getUserId())->query()->fetch();
+            $dbResult = $this->db->select([$fieldName])->from([$this->getCustomerTable()])
+                ->condition($this->getUserId())->query()->fetch();
             if (!$dbResult) {
                 throw new \Exception('Cannot find user pass in DB, while user is logged and session is ON!');
             }
 
             $this->user = $dbResult;
             if (!$this->passwordVerify($data['old_pass'])) {
-                $this->msgModel->setMsg('failure', $fieldName, $fieldName);
+                $this->msgModel->setMessage('failure', $fieldName, $fieldName);
 
                 return true;
             } else {
@@ -367,7 +341,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
                 case 'email' :
                 case 'phone' :
                 case 'address' :
-                    $result = $data[$fieldName] === $this->sessionModel->getUserData()[$fieldName];
+                    $result = $data[$fieldName] === $this->sessionModel->getCustomerData()[$fieldName];
                     break;
                 default :
                     throw new \Exception(
@@ -377,7 +351,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         }
 
         if ($result) {
-            $this->msgModel->setMsg('failure', 'self_' . $fieldName, $fieldName);
+            $this->msgModel->setMessage('failure', 'self_' . $fieldName, $fieldName);
         }
 
         return $result;
@@ -390,7 +364,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     public function updateItemImage(string $fieldName): void
     {
         $this->updatingFile($fieldName);
-        $this->deleteFile($fieldName, $this->getRefererUserType(), $this->oldData[$fieldName]);
+        $this->deleteFile($fieldName, $this->sessionModel->getUserType(), $this->oldData[$fieldName]);
     }
 
     /**
@@ -409,7 +383,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
     protected function updatingFile(string $fieldName): void
     {
         $this->newData[$fieldName] = $this->createUniqueFileName($fieldName);
-        if (!$this->moveUploadFile($fieldName, $this->getRefererUserType(), $this->newData[$fieldName])) {
+        if (!$this->moveUploadFile($fieldName, $this->sessionModel->getUserType(), $this->newData[$fieldName])) {
             $this->msgModel->setErrorMsg(self::FILE_ERR);
 
             return;
@@ -419,21 +393,21 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         $dbResult = $this->db->update([$this->getCustomerTable()], $this->newData)
             ->condition($this->getUserId())->exec();
         if (!$dbResult) {
-            $this->deleteFile($fieldName, $this->getRefererUserType(), $this->newData[$fieldName]);
+            $this->deleteFile($fieldName, $this->sessionModel->getUserType(), $this->newData[$fieldName]);
             throw new \Exception('Problems to update user image in DB');
         } else {
             if ($this->validateRefererAction('change')) {
-                $this->oldData = $this->formatArrayData([$fieldName], $this->sessionModel->getUserData());
+                $this->oldData = $this->formatArrayData([$fieldName], $this->sessionModel->getCustomerData());
             }
 
-            $this->sessionModel->setUserData($this->newData);
-            $this->msgModel->setMsg('success', $fieldName, $fieldName);
+            $this->sessionModel->setCustomerData($this->newData);
+            $this->msgModel->setMessage('success', $fieldName, $fieldName);
         }
     }
 
     protected function validateRefererAction(string $getRefererAction): bool
     {
-        return $this->getRefererAction() === $getRefererAction;
+        return $this->serverInfo->getRefererAction() === $getRefererAction;
     }
 
     /**
@@ -442,7 +416,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
      */
     public function delete(string $fieldName): void
     {
-        if (array_key_exists($fieldName, $this->sessionModel->getUserData())) {
+        if (array_key_exists($fieldName, $this->sessionModel->getCustomerData())) {
             $data[$fieldName] = null;
             $dbResult = $this->db->update([$this->getCustomerTable()], $data)
                 ->condition($this->getUserId())->exec();
@@ -451,12 +425,14 @@ abstract class AbstractUserModel extends AbstractDefaultModel
             } else {
                 if ($fieldName === 'image' || $fieldName === 'text_file') {
                     $this->deleteFile(
-                        $fieldName, $this->getRefererUserType(), $this->sessionModel->getUserData()[$fieldName]
+                        $fieldName,
+                        $this->sessionModel->getUserType(),
+                        $this->sessionModel->getCustomerData()[$fieldName]
                     );
                 }
 
-                $this->sessionModel->deleteUserData($fieldName);
-                $this->msgModel->setMsg('success', $fieldName, $fieldName);
+                $this->sessionModel->deleteCustomerData($fieldName);
+                $this->msgModel->setMessage('success', $fieldName, $fieldName);
             }
         } else {
             throw new \Exception('Failure to delete data from session because it not exist there!');
@@ -470,8 +446,8 @@ abstract class AbstractUserModel extends AbstractDefaultModel
      */
     public function remove(string $fieldName): ?array
     {
-        if (array_key_exists(strtolower($fieldName), $this->sessionModel->getUserData())) {
-            $userData[strtolower($fieldName)] = $this->sessionModel->getUserData()[strtolower($fieldName)];
+        if (array_key_exists(strtolower($fieldName), $this->sessionModel->getCustomerData())) {
+            $userData[strtolower($fieldName)] = $this->sessionModel->getCustomerData()[strtolower($fieldName)];
         } else {
             throw new \Exception(
                 'Failure to get to remove_profile_item.phtml page,
@@ -487,56 +463,16 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         return self::CUSTOMER_DB_TABLE;
     }
 
-    protected function getRefererOption(string $option): string
-    {
-        return $this->serverInfo->getRefererOption($option);
-    }
-
-    protected function getRequestOption(string $option): string
-    {
-        return $this->serverInfo->getRequestOption($option);
-    }
-
-    protected function getRequestUserType(): string
-    {
-        return $this->getRequestOption(self::USER_TYPE);
-    }
-
-    protected function getRequestController(): string
-    {
-        return $this->getRequestOption(self::CONTROLLER);
-    }
-
-    protected function getRequestAction(): string
-    {
-        return $this->getRequestOption(self::ACTION);
-    }
-
-    protected function getRefererUserType(): string
-    {
-        return $this->getRefererOption(self::USER_TYPE);
-    }
-
-    protected function getRefererController(): string
-    {
-        return $this->getRefererOption(self::CONTROLLER);
-    }
-
-    protected function getRefererAction(): string
-    {
-        return $this->getRefererOption(self::ACTION);
-    }
-
     /**
      * @return array
      */
     protected function getUserId(): array
     {
-        return $this->formatArrayData(['id'], $this->sessionModel->getUserData());
+        return $this->formatArrayData(['id'], $this->sessionModel->getCustomerData());
     }
 
     protected function setDbMsgModel(): void
     {
-        $this->db->setMsgModel($this->msgModel);
+        $this->db->setMessageModel($this->msgModel);
     }
 }

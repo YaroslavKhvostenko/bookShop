@@ -3,15 +3,12 @@ declare(strict_types=1);
 
 namespace Models\AbstractProjectModels;
 
-use Interfaces\IDataManagement;
 use Models\AbstractProjectModels\Session\User\AbstractSessionModel;
 use Models\ProjectModels\Sql\MySql\MySqlDbWorkModel;
-use Models\ProjectModels\DataRegistry;
 
 abstract class AbstractBookModel extends AbstractDefaultModel
 {
     protected MySqlDbWorkModel $db;
-    protected ?IDataManagement $serverInfo = null;
 
     public function __construct(AbstractSessionModel $sessionModel)
     {
@@ -19,16 +16,8 @@ abstract class AbstractBookModel extends AbstractDefaultModel
         $this->db = MySqlDbWorkModel::getInstance();
     }
 
-    /**
-     * @return IDataManagement
-     * @throws \Exception
-     */
-    protected function getServerInfo(): IDataManagement
+    protected function setDbMsgModel(): void
     {
-        if (!$this->serverInfo) {
-            $this->serverInfo = DataRegistry::getInstance()->get('server');
-        }
-
-        return $this->serverInfo;
+        $this->db->setMessageModel($this->msgModel);
     }
 }
