@@ -1,0 +1,41 @@
+<?php
+/**
+ * @var $options array
+ * * @var $this Views\ProjectViews\Admin\AdminView
+ */
+?>
+<?php if (!empty($options['data']['tasks'])): ?>
+    <form action="/admin/task/update" method="post">
+        <table border="1" cellpadding="5" cellspacing="0" width="100%">
+            <tr>
+                <th>№</th>
+                <th>Описание задачи</th>
+                <th>Статус задачи</th>
+            </tr>
+            <?php
+            $i = 1;
+            foreach ($options['data']['tasks'] as $task):
+                ?>
+                <tr>
+                    <td><?= $i ?></td>
+                    <td><?= $task['task_description'] ?></td>
+                    <td>
+                        <?php if ((int)$task['task_status'] === 0): ?>
+                            Задача не выполнена
+                            <br>
+                            <label>Изменить статус задачи</label>
+                            <br>
+                            <input type="checkbox" name="task_id/<?= $task['task_id']?>" value="task_status/1">
+                        <?php else: ?>
+                            Задача выполнена
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php
+            $i++;
+            endforeach;
+            ?>
+        </table>
+        <input type="submit" value="Изменить статус задач">
+    </form>
+<?php endif; ?>

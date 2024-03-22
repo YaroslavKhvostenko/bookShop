@@ -1,8 +1,15 @@
+<?php
+/**
+ * @var $options array
+ */
+?>
 <div class="header_inner">
     <nav class="nav">
         <a class="nav_link" href="/admin">Главная</a>
-        <a class="nav_link" href="/admin/catalog/show">Каталог</a>
-        <a class="nav_link" href="/admin/order">Заказы</a>
+        <?php if ($options['user']['is_approved'] === '1'): ?>
+            <a class="nav_link" href="/admin/catalog/show">Каталог</a>
+            <a class="nav_link" href="/admin/order">Заказы</a>
+        <?php endif; ?>
         <a class="nav_link" href="/admin/about">О нас</a>
         <a class="nav_link" href="/admin/user/logout">Выйти</a>
     </nav>

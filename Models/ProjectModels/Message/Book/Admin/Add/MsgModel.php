@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Models\ProjectModels\Message\Book\Admin\Add;
 
-use Models\AbstractProjectModels\Message\Book\AbstractBaseMsgModel;
+use Models\AbstractProjectModels\Message\Book\Add\AbstractMsgModel;
 
-class MsgModel extends AbstractBaseMsgModel
+class MsgModel extends AbstractMsgModel
 {
     private const NO_AUTHORS = 'На данный момент нет ни одного автора, добавленного в базу данных!';
     private const NO_GENRES = 'На данный момент нет ни одного жанра, добавленного в базу данных!';

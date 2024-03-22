@@ -63,16 +63,28 @@ abstract class AbstractDefaultView
 
     protected function getHeaderPath(): string
     {
-        return $this->getPath();
+        return $this->getFullPath();
+    }
+
+    protected function getContentPath(): string
+    {
+        return $this->getFullPath();
+    }
+
+    protected function getFullPath(): string
+    {
+        $path = $this->getPath();
+        if ($this->userSessModel->getUserType() === 'guest_admin' || $this->userSessModel->getUserType() === 'admin') {
+            $path .= 'admin/';
+        } elseif ($this->userSessModel->getUserType() === 'head_admin') {
+            $path .= 'head_admin/';
+        }
+
+        return $path;
     }
 
     protected function getPath(): string
     {
         return self::LAYOUTS_PATH;
-    }
-
-    protected function getContentPath(): string
-    {
-        return $this->getPath();
     }
 }

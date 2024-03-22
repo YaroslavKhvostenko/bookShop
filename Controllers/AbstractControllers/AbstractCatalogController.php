@@ -29,8 +29,8 @@ abstract class AbstractCatalogController extends AbstractController
     public function showAction(): void
     {
         try {
-            if ($this->validateRequest()) {
-                $this->prepareRedirect();
+            if ($this->validateRequester()) {
+                $this->redirectHomeByUserType();
             } else {
                 $this->catalogModel->setMessageModel($this->getMsgModel('request'));
                 $data = $this->catalogModel->getCatalog();
@@ -42,5 +42,8 @@ abstract class AbstractCatalogController extends AbstractController
         }
     }
 
-    abstract protected function validateRequest(): bool;
+    protected function prepareRedirect(string $url = null): void
+    {
+        $this->redirect($url);
+    }
 }

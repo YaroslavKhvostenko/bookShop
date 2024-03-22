@@ -21,7 +21,6 @@ class FactoryValidator extends AbstractFactoryValidator
         $customerType = strtolower($customerType);
         $className = 'Validator';
         $nameSpace = self::NAME_SPACE . 'Admin' . '\\';
-
         switch ($customerType) {
             case 'head_admin' :
                 $nameSpace .= 'HeadAdmin\\';

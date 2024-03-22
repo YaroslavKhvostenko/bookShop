@@ -16,6 +16,7 @@ class MsgModel extends AbstractBaseMsgModel
 
     public function __construct()
     {
-        $this->messages[self::EMPTY] = self::EMPTY_DATA;
+        parent::__construct();
+        $this->messages['empty'] = array_merge($this->messages['empty'], self::EMPTY_DATA);
     }
 }

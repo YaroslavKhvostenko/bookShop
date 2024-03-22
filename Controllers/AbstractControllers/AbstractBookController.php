@@ -17,7 +17,6 @@ abstract class AbstractBookController extends AbstractController
     protected AbstractBookModel $bookModel;
     protected AbstractBookView $bookView;
 
-
     public function __construct(
         AbstractBookModel $bookModel,
         AbstractBookView $bookView,
@@ -32,18 +31,18 @@ abstract class AbstractBookController extends AbstractController
      * @param array $result
      * @param string $messagesType
      * @param $checkType
-     * @param string $controller
-     * @param string $action
-     * @param string|null $param
+     * @param string|null $controller
+     * @param string|null $action
+     * @param array|null $params
      * @throws \Exception
      */
     protected function checkResult(
         array $result,
         string $messagesType,
         $checkType,
-        string $controller,
-        string $action,
-        string $param = null
+        string $controller = null,
+        string $action = null,
+        array $params = null
     ): void {
         foreach ($result as $field => $value) {
             if ($value === $checkType) {
@@ -51,11 +50,8 @@ abstract class AbstractBookController extends AbstractController
             }
         }
 
-        $this->prepareRedirect($this->createRedirectString($controller, $action, $param));
+        $this->prepareRedirect($this->createRedirectString($controller, $action, $params));
     }
 
     abstract protected function addAction(array $params = null): void;
-    abstract protected function validateRequest(): bool;
-    abstract protected function redirectHome(): void;
-    abstract protected function redirectHomeByCustomerType(): void;
 }

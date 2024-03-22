@@ -60,14 +60,14 @@ abstract class AbstractBaseController
      * @param \Exception $exception
      * @param string|null $controller
      * @param string|null $action
-     * @param string|null $params
+     * @param array|null $params
      * @throws \Exception
      */
     protected function catchException(
         \Exception $exception,
         string $controller = null,
         string $action = null,
-        string $params = null
+        array $params = null
     ): void {
         $this->getLogger()->logException($exception);
         $this->getMsgModel()->setErrorMsg();
@@ -77,8 +77,13 @@ abstract class AbstractBaseController
     protected function createRedirectString(
         string $controller = null,
         string $action = null,
-        string $params = null
+        array $paramsArray = null
     ): string {
+        $params = null;
+        if (!is_null($paramsArray) && !empty($paramsArray)) {
+            $params = implode('/', array_filter($paramsArray));
+        }
+
         return implode('/', array_filter([$controller, $action, $params]));
     }
 
@@ -88,4 +93,6 @@ abstract class AbstractBaseController
     }
 
     abstract protected function prepareRedirect(string $url = null): void;
+
+    abstract protected function validateRequester(): bool;
 }

@@ -1,0 +1,24 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\OrderView
+ */
+?>
+<form action="/order/new" method="post">
+    <label>Ваше имя(только латинские буквы или только кириллица, от 2 до 30 символов):</label>
+    <input name="customer_name" type="text" <?= $this->getFormValue('name') ?>/>
+    <br>
+    <label >Ваш e-mail:</label>
+    <input name="customer_email" type="text" <?= $this->getFormValue('email') ?>/>
+    <br>
+    <label>Ваш мобильный телефон:</label>
+    <input name="customer_phone" type="text" <?= $this->getFormValue('phone') ?>/>
+    <br>
+    <label>Ваш адресс (от 10 до 100 символов):</label>
+    <input name="customer_address" type="text" <?= $this->getFormValue('address') ?>/>
+    <br>
+    <label>Комментарий к заказу(не обязателен, от 10 до 100) :</label>
+    <input name="order_comment" type="text"/>
+    <br>
+    <button type="submit">Оформить заказ</button>
+</form>

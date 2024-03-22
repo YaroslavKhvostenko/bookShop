@@ -22,21 +22,16 @@ class UserController extends AbstractUserController
 
     protected function prepareRedirect(string $url = null): void
     {
-        $this->redirect('admin/' . $url);
-    }
-
-    protected function logoutByCustomerType(): void
-    {
-        if ($this->sessionModel->isAdmin()) {
-            $this->userModel->logout();
-            $this->redirectHome();
-        } else {
-            $this->redirect();
-        }
+        parent::prepareRedirect('admin/' . $url);
     }
 
     protected function validateRequester(): bool
     {
         return !$this->sessionModel->isAdmin();
+    }
+
+    protected function logoutRedirect(): void
+    {
+        $this->redirect();
     }
 }

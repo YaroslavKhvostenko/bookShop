@@ -1,0 +1,63 @@
+<?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\BasketView
+ */
+?>
+<?php if (!is_null($options['data'])): ?>
+    <form action="/basket/clear" method="post">
+        <button type="submit">Очистить корзину</button>
+    </form>
+    <table border="1" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th>№</th>
+            <th>Картинка</th>
+            <th>Название</th>
+            <th>Стоимость за шт.</th>
+            <th>Количество</th>
+            <th>Общая стоимость за количество</th>
+            <th>Убрать из корзины</th>
+        </tr>
+        <?php
+        $i = 1;
+        $summaryPrice = 0;
+        foreach ($options['data'] as $bookId => $bookDetails):
+            ?>
+            <tr>
+                <td><?= $i++ ?></td>
+                <td>
+                    <img src="/Media/images/books_logos/<?= $bookDetails['image'] ?>"
+                         alt="avatar" width="100px" height="100px">
+                </td>
+                <td><?= $bookDetails['title'] ?></td>
+                <td><?= $bookDetails['price'] ?> грн.</td>
+                <td>
+                    <?= $bookDetails['quantity'] ?> шт. <br>
+                    <label>Изменить количество книг (написать необходимое количество):</label>
+                    <form action="/basket/update" method="post">
+                        <input name="<?= $bookId ?>" type="text" />
+                        <button type="submit">Изменить количество у книг</button>
+                    </form>
+                </td>
+                <td>
+                    <?php
+                    $booksPrice = (int)$bookDetails['quantity'] * (int)$bookDetails['price'];
+                    ?>
+                    <?= $booksPrice ?>
+                </td>
+                <td>
+                    <form action="/basket/remove/<?= $bookId?>" method="post">
+                        <button type="submit">Убрать из корзины</button>
+                    </form>
+                </td>
+            </tr>
+            <?php
+            $summaryPrice += $booksPrice;
+            ?>
+        <?php  endforeach; ?>
+    </table>
+    <br>
+    Общая стоимость всех книг <?= $summaryPrice?> грн.
+    <br>
+    <a href="/order/create">Оформить заказ</a>
+<?php endif; ?>

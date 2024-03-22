@@ -1,0 +1,29 @@
+<?php
+/**
+ * @var $options array
+ * * @var $this Views\ProjectViews\HeadAdmin\AdminView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'create_task_sidebar.phtml'?>
+</div>
+<?php if (is_null($options['data'])): ?>
+    Желаете предоставить <a href="/head/admin/provide">доступ</a> администраторам?
+<?php else: ?>
+    <form action="/head/task/new" method="post">
+        <label>Описание задачи:</label>
+        <input name="task_description" type="text" />
+        <br>
+        <label>Выберите администратора :</label>
+        <select name="admin_id">
+            <option value=''>Не выбрано</option>
+            <?php if (isset($options['data'])): ?>
+                <?php foreach($options['data'] as $admin): ?>
+                    <option value='<?= $admin['id'] ?>'> <?= $admin['name'] ?> </option>
+                <?php endforeach; ?>
+            <?php endif;?>
+        </select>
+        <br>
+        <button type="submit">Назанчить задачу</button>
+    </form>
+<?php endif; ?>

@@ -9,7 +9,6 @@ use Models\ProjectModels\Session\HeadAdmin\SessionModel;
 
 class AdminView extends AbstractAdminView
 {
-    protected const ADMIN_LAYOUTS = 'head_admin/';
     private const PROVIDE = 'provide';
     private const REMOVE = 'remove';
     private const REDIRECT = 'redirect';

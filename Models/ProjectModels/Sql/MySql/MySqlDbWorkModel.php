@@ -125,7 +125,7 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
      * @return $this
      * @throws \Exception
      */
-    public function condition(array $conditionData, array $andOr = null): self
+    public function condition(array $conditionData, array $sqlOperators = null ,array $andOr = null): self
     {
         $this->methodsPath .= '->condition()';
         $globalCounter = 1;
@@ -133,6 +133,11 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         $this->sql .= ' WHERE ';
         foreach ($conditionData as $field => $data) {
             $this->sql .= "`{$field}` ";
+            $sqlOperator = null;
+            if (!is_null($sqlOperators)) {
+                $sqlOperator = array_shift($sqlOperators);
+            }
+
             $conditionOperator = null;
             if (!is_null($andOr)) {
                 $conditionOperator = array_shift($andOr);
@@ -152,16 +157,17 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
                     } else {
                         $this->sql .= "{$value}, ";
                     }
+
                     $arrayDataCounter++;
                 }
             } else {
-                if (!is_null($data)) {
-                    $data = $this->handleData($data);
-                }  else {
-                    $data = 'NULL';
+                $data = $this->handleData($data);
+                if (is_null($sqlOperator)) {
+                    $operator = $data === 'NULL' ? 'IS' : '=';
+                } else {
+                    $operator = $sqlOperator;
                 }
 
-                $operator = $data === 'NULL' ? 'IS' : '=';
                 if ($globalCounter === $globalCount) {
                     $this->sql .= "{$operator} {$data}";
                 } else {
@@ -180,6 +186,52 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
     }
 
     /**
+     * @param array $updateTables
+     * @param array $updateData
+     * @return $this
+     * @throws \Exception
+     */
+    public function update(array $updateTables, array $updateData): self
+    {
+        $this->methodsPath = 'update()';
+        $this->sql = 'UPDATE ';
+        $i = 1;
+        $count = count($updateTables);
+        foreach ($updateTables as $updateTable) {
+            if ($i === $count) {
+                $this->sql .= "`{$updateTable}` ";
+            } else {
+                $this->sql .= "`{$updateTable}`, ";
+            }
+
+            $i++;
+        }
+
+        $this->sql .= 'SET ';
+        $globalCounter = 1;
+        $globalCount = count($updateData);
+        foreach ($updateData as $field => $data) {
+            if (is_array($data)) {
+                $dataCounter = 1;
+                $dataCount = count($data);
+                $this->sql .= "`{$field}` = (";
+                foreach ($data as $fieldValue) {
+                    $fieldValue = $this->handleData($fieldValue);
+                    $this->sql .= $dataCounter === $dataCount ? "$fieldValue)" : "$fieldValue, ";
+                    $dataCounter++;
+                }
+            } else {
+                $data = $this->handleData($data);
+                $this->sql .= $globalCounter === $globalCount ? "`{$field}` = $data" : "`{$field}` = $data, ";
+            }
+
+            $globalCount++;
+        }
+
+        return self::$selfInstance;
+    }
+
+    /**
      * @param null $data
      * @return false|int|string
      * @throws \Exception
@@ -188,9 +240,11 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
     {
         $this->methodsPath .= '->handleData()';
         if (is_numeric($data)) {
-            $data = (int)$data;
+            $data = !is_float($data) ? (int)$data : $data;
         } elseif (is_string($data)) {
             $data = $this->pdo->quote($data);
+        } elseif (is_null($data)) {
+            $data = 'NULL';
         } else {
             throw new \Exception('Wrong data type in ' . "$this->methodsPath!");
         }
@@ -198,10 +252,13 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
         return $data;
     }
 
-    public function orderBy(string $orderField, string $orderType): self
+    public function orderBy(string $orderField, string $orderType = null): self
     {
         $this->methodsPath .= '->orderBy()';
-        $this->sql .= ' ORDER BY ' . $orderField . ' ' . $orderType;
+        $this->sql .= ' ORDER BY ' . "`$orderField`";
+        if (!is_null($orderType)) {
+            $this->sql .= ' ' . $orderType;
+        }
 
         return self::$selfInstance;
     }
@@ -303,95 +360,50 @@ class MySqlDbWorkModel extends AbstractSqlModel implements IMySqlInterface
             $i++;
         }
         $sql = $insert . $values;
-        try {
             $stmt = $this->pdo->prepare($sql);
             foreach ($data as $field => $value) {
                 $stmt->bindValue(":{$field}", $value);
             }
 
-            return $stmt->execute();
-        } catch (\PDOException $PDOException) {
-            $this->catchException(
-                $PDOException,
-                'Error inserting data to DB.' . "\n" .
-                "Error: "      . $PDOException->getMessage() . "\n" .
-                'File: '      . $PDOException->getFile() . "\n" .
-                'Line: '    . $PDOException->getLine()
-            );
-        }
+            if (!$stmt->execute()) {
+                throw new \PDOException('Problems to insertd data in db!');
+            }
 
-        return false;
+            return true;
     }
 
     /**
-     * @param array $updateTables
-     * @param array $updateData
-     * @return $this
-     * @throws \Exception
+     * @return int
      */
-    public function update(array $updateTables, array $updateData): self
+    public function exec(): int
     {
-        $this->methodsPath .= 'update()';
-        $this->sql = 'UPDATE ';
-        $i = 1;
-        $count = count($updateTables);
-        foreach ($updateTables as $updateTable) {
-            if ($i === $count) {
-                $this->sql .= "`{$updateTable}` ";
-            } else {
-                $this->sql .= "`{$updateTable}`, ";
-            }
-
-            $i++;
-        }
-
-        $this->sql .= 'SET ';
-        $i = 1;
-        $count = count($updateData);
-        foreach ($updateData as $key => $value) {
-            if (is_numeric($value)) {
-                $value = (int)$value;
-            } elseif (is_string($value)) {
-                $value = $this->pdo->quote($value);
-            } elseif (is_null($value)) {
-                $value = 'NULL';
-            } else {
-                throw new \Exception('Wrong data type in ' . $this->methodsPath . ' !');
-            }
-
-            if ($i === $count) {
-                $this->sql .= "`{$key}` = " . $value;
-            } else {
-                $this->sql .= "`{$key}` = $value, ";
-            }
-
-            $i++;
-        }
-
-        return self::$selfInstance;
-    }
-
-    /**
-     * @return false|int
-     * @throws \Exception
-     */
-    public function exec()
-    {
-        try{
-            return $this->pdo->exec($this->sql);
-        } catch (\PDOException $PDOException) {
-            $this->catchException(
-                $PDOException,
-                'Error updating data in DB.' . "\n" .
-                'Check : ' . $this->methodsPath . ' !'
+        $result = $this->pdo->exec($this->sql);
+        if (!$result) {
+            throw new \PDOException(
+                'Error updating data in DB.' . "\n" . 'Check : ' . $this->methodsPath . ' !'
             );
         }
 
-        return false;
+        return $result;
     }
 
     public function getLastInsertedId(): string
     {
         return $this->pdo->lastInsertId();
+    }
+
+    public function beginTransaction(): void
+    {
+       $this->pdo->beginTransaction();
+    }
+
+    public function rollBack(): void
+    {
+        $this->pdo->rollBack();
+    }
+
+    public function commit(): void
+    {
+       $this->pdo->commit();
     }
 }

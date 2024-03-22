@@ -33,6 +33,7 @@ abstract class AbstractUserModel extends AbstractDefaultModel
         $andOr = count($conditionData) === 3 ? ['OR', 'OR'] : ['OR'];
         $dbResult = $this->db->select(['id'])->from([$this->getCustomerTable()])->condition(
             $conditionData,
+            null,
             $andOr
         )->query()->fetchAll();
         if ($dbResult) {

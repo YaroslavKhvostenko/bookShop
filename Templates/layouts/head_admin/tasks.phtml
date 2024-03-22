@@ -1,0 +1,53 @@
+<?php
+/**
+ * @var $options array
+ * * @var $this Views\ProjectViews\HeadAdmin\AdminView
+ */
+?>
+<div class="sidebar">
+    <?php include_once 'tasks_sidebar.phtml'?>
+</div>
+<?php if (!empty($options['data']['tasks'])): ?>
+    <form action="/head/task/update" method="post">
+        <table border="1" cellpadding="5" cellspacing="0" width="100%">
+            <tr>
+                <th>№</th>
+                <th>Описание задачи</th>
+                <th>Статус задачи</th>
+                <th>Ответственный за задачу</th>
+            </tr>
+            <?php
+            $i = 1;
+            foreach ($options['data']['tasks'] as $task):
+                ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td><?= $task['task_description'] ?></td>
+                    <td>
+                        <?php if ((int)$task['task_status'] === 1): ?>
+                            Задача выполнена
+                        <?php else: ?>
+                            Задача невыполнена
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?= $task['admin_login'] . ' - ' . $task['admin_name']?>
+                        <?php if ((int)$task['task_status'] === 0): ?>
+                            <br>
+                            <select name="task_id/<?= $task['task_id']?>">
+                                <option value=''>Администратор не выбран</option>
+                                <?php foreach($options['data']['admins'] as $admin): ?>
+                                    <?php if ((int)$task['admin_id'] !== (int)$admin['id']): ?>
+                                        <option value="admin_id/<?= $admin['id'] ?>"> <?= $admin['name'] ?> </option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </select>
+                            <br>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php  endforeach; ?>
+        </table>
+        <button type="submit">Переназначить задачу</button>
+    </form>
+<?php endif; ?>

@@ -7,7 +7,134 @@
 <div class="sidebar">
     <?php include_once 'catalog_sidebar.phtml'?>
 </div>
-<?php if ($options['data'] !== null): ?>
+<?php if (isset($options['data']['books_exist']) && $options['data']['books_exist'] === true): ?>
+    ФИЛЬТР:
+    <br>
+    <form action="/admin/filter/set" method="get">
+        <label>Сортировать по автору : </label>
+        <br>
+        <select name="author_id">
+            <option value=''>Сортировка по автору не выбрана</option>
+            <?php if (isset($options['data']['authors'])) : ?>
+                <?php foreach ($options['data']['authors'] as $author) : ?>
+                    <option value='<?= $author['id'] ?>'><?= $author['name'] ?></option>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </select>
+        <br>
+        <br>
+        <label>Сортировать по жанру : </label>
+        <br>
+        <select name="genre_id">
+            <option value=''>Сортировка по жанру не выбрана</option>
+            <?php if (isset($options['data']['genres'])) : ?>
+                <?php foreach ($options['data']['genres'] as $genre) : ?>
+                    <option value='<?= $genre['id'] ?>'><?= $genre['title'] ?></option>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </select>
+        <br>
+        <br>
+        <label>Сортировать по рейтингу книг : </label>
+        <br>
+        <select name="rating_operator">
+            <option value=''>Сортировка по рейтингу не выбрана</option>
+            <option value='='>Рейтинг равен</option>
+            <option value='>'>Рейтинг больше чем </option>
+            <option value='<'>Рейтинг меньше чем </option>
+        </select>
+        <label> Число от 1 до 5 (например 4 или 4.5) :</label>
+        <input name="rating" type="text" />
+        <br>
+        <br>
+        <label>Сортировать по цене книг : </label>
+        <br>
+        <select name="price_operator">
+            <option value=''>Сортировка по цене книг не выбрана</option>
+            <option value='='>Цена равна</option>
+            <option value='>'>Цена больше чем </option>
+            <option value='<'>Цена меньше чем </option>
+        </select>
+        <label> Цена любое число (например 399 или 400.5):</label>
+        <input name="price" type="text" />
+        <br>
+        <br>
+        <label>Сортировать по количеству книг : </label>
+        <br>
+        <select name="quantity_operator">
+            <option value=''>Сортировка по количеству книг не выбрана</option>
+            <option value='='>Количество равно</option>
+            <option value='>'>Количество больше чем</option>
+            <option value='<'>Количество меньше чем</option>
+        </select>
+        <label> Количество любое целое число (например 399):</label>
+        <input name="quantity" type="text" />
+        <br>
+        <br>
+        <label>Упорядочить по : </label>
+        <br>
+        <select name="order_by">
+            <option value=''>Упорядочивание не выбрано</option>
+            <option value='book_id'>По последовательности книг</option>
+            <option value='author_id'>По авторам(использовать без сортировки по автору)</option>
+            <option value='genre_id'>По жанрам(использовать без сортировки по жанру)</option>
+            <option value='rating'>По рейтингу(использовать без сортировки по рейтину со значением равно)</option>
+            <option value='price'>По цене(использовать без сортировки по цене со значением равно)</option>
+            <option value='quantity'>По количеству(использовать без сортировки по количеству со значением равно)</option>
+        </select>
+        <br>
+        <br>
+        <label>Последовательность (использовать при использовании зеркального значения упорядочивания) : </label>
+        <br>
+        <select name="order_by_type">
+            <option value=''>Последовательность не выбрана</option>
+            <option value=''>От первой книги к последней</option>
+            <option value='DESC'>От последней книги к первой</option>
+            <option value=''>
+                По автору : вначале книги одного автора, затем другого и т.д.(Использовать без сортировки по автору)
+            </option>
+            <option value='DESC'>
+                По автору в обратном порядке : вначале книги одного автора, затем другого и т.д.
+                (Использовать без сортировки по автору)
+            </option>
+            <option value=''>По жанру : восходящий порядок (Использовать без сортировки по жанру)</option>
+            <option value='DESC'>По жанру в обратном порядке (Использовать без сортировки по автору)</option>
+            <option value=''>
+                По рейтингу на возростание (Использовать без сортировки по рейтингу со значением равно)
+            </option>
+            <option value='DESC'>
+                По рейтингу на убывание (Использовать без сортировки по рейтингу со значением равно)
+            </option>
+            <option value=''>
+                По цене на возростание (Использовать без сортировки по цене со значением равно)
+            </option>
+            <option value='DESC'>
+                По цене на убывание (Использовать без сортировки по цене со значением равно)
+            </option>
+            <option value=''>
+                По количеству на возростание (Использовать без сортировки по количеству со значением равно)
+            </option>
+            <option value='DESC'>
+                По количеству на убывание (Использовать без сортировки по количеству со значением равно)
+            </option>
+        </select>
+        <br>
+        <input type="submit" value="Отфильтровать">
+    </form>
+    <br>
+    <?php if ($this->issetFilter('show')): ?>
+        <form action="/admin/filter/clear" method="get">
+            <label>ОЧИСТИТЬ ФИЛЬТР : </label>
+            <br>
+            <input type="checkbox" name="check_mark" value="approve">
+            <br>
+            <input type="submit" value="Очистить фильтр">
+        </form>
+        <br>
+        <br>
+    <?php endif; ?>
+<?php endif; ?>
+<?php if ($options['data']['books'] !== null): ?>
     <table border="1" cellpadding="5" cellspacing="0" width="100%">
         <tr>
             <th>№</th>
@@ -23,7 +150,7 @@
         </tr>
         <?php
         $i = 1;
-        foreach ($options['data'] as $book):
+        foreach ($options['data']['books'] as $book):
             ?>
             <tr>
                 <td><?= $i++ ?></td>
