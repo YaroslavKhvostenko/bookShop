@@ -28,8 +28,8 @@ class BookController extends AbstractBookController
      */
     public function addAction(array $params = null): void
     {
-        if ($this->validateRequest()) {
-            $this->redirectHomeByCustomerType();
+        if ($this->validateRequester()) {
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -40,7 +40,6 @@ class BookController extends AbstractBookController
                 $this->processWrongRequest(
                     'default',
                     'Params have not to be null in ' . $this->serverInfo->getRequestAction() . 'Action!',
-                    $this->serverInfo->getRequestController(),
                     'catalog',
                     'show'
                 );
@@ -69,8 +68,8 @@ class BookController extends AbstractBookController
      */
     public function newAction(array $params): void
     {
-        if ($this->validateRequest()) {
-            $this->redirectHomeByCustomerType();
+        if ($this->validateRequester()) {
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -87,7 +86,8 @@ class BookController extends AbstractBookController
                 $this->processWrongRequest(
                     'default',
                     'Params have not to be null in ' . $this->serverInfo->getRequestAction() . 'Action!',
-                    'catalog', 'show'
+                    'catalog',
+                    'show'
                 );
 
                 return;
@@ -98,14 +98,14 @@ class BookController extends AbstractBookController
             if (in_array('', $data)) {
                 $this->checkResult(
                     $data, 'empty', '',
-                    $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction(), $this->param
+                    $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction(), [$this->param]
                 );
             } else {
                 $data = $this->dataValidator->correctCheck($data);
                 if (in_array('', $data)) {
                     $this->checkResult(
                         $data, 'wrong', '',
-                        $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction(), $this->param
+                        $this->serverInfo->getRefererController(), $this->serverInfo->getRefererAction(), [$this->param]
                     );
                 } else {
                     if ($this->param === 'book' && !$this->newBook()) {
@@ -118,7 +118,7 @@ class BookController extends AbstractBookController
                         $this->createRedirectString(
                             $this->serverInfo->getRefererController(),
                             $this->serverInfo->getRefererAction(),
-                            $this->param
+                            [$this->param]
                         )
                     );
                 }
@@ -147,7 +147,7 @@ class BookController extends AbstractBookController
                 false,
                 $this->serverInfo->getRefererController(),
                 $this->serverInfo->getRefererAction(),
-                $this->param
+                [$this->param]
             );
 
             return false;
@@ -187,23 +187,15 @@ class BookController extends AbstractBookController
 
     protected function redirectHome(): void
     {
-        $this->prepareRedirect();
+        $this->redirect('admin/');
     }
 
-    protected function redirectHomeByCustomerType(): void
+    protected function validateRequester(): bool
     {
-        if ($this->sessionModel->isHeadAdmin()) {
-            $this->prepareRedirect();
-        } else {
-            $this->redirect();
-        }
-    }
-
-    protected function validateRequest(): bool
-    {
-        return $this->sessionModel->isHeadAdmin() ||
+        return (
+            $this->sessionModel->isHeadAdmin() ||
             !$this->sessionModel->isAdmin() ||
-            !$this->sessionModel->isApproved();
+            !$this->sessionModel->isApproved()
+        );
     }
-
 }

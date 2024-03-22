@@ -11,7 +11,8 @@ class Manager implements IDataManagement
     private const MESSAGE_KEY = 'resultMsg';
     private const SESS_FIELDS = [
         self::USER_KEY => self::USER_KEY,
-        self::MESSAGE_KEY => self::MESSAGE_KEY
+        self::MESSAGE_KEY => self::MESSAGE_KEY,
+        'filter' => 'filter'
     ];
 
     public function getData(string $fieldName): ?array

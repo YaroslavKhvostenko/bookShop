@@ -14,7 +14,7 @@ class CatalogModel extends AbstractCatalogModel
 
     public function __construct()
     {
-        parent::__construct(SessionModel::getInstance());
+        parent::__construct(SessionModel::getInstance(), new FilterModel());
         $this->catalogFields = array_merge($this->catalogFields, self::CATALOG_FIELDS);
     }
 }

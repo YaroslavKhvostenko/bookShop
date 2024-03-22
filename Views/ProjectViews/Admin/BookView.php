@@ -10,7 +10,6 @@ use Models\ProjectModels\Session\Admin\SessionModel as AdminSessModel;
 class BookView extends AbstractBookView
 {
     private ?string $param = null;
-    private const ADMIN_LAYOUTS = 'admin/';
     private const TITLES = [
         'add' => self::ADD_ACTION_TITLES
     ];
@@ -129,16 +128,6 @@ class BookView extends AbstractBookView
         return self::PAGES[$actionName][$this->param];
     }
 
-    protected function getContentPath(): string
-    {
-        return parent::getContentPath() . $this->getAdminLayouts();
-    }
-
-    protected function getHeaderPath(): string
-    {
-        return parent::getHeaderPath() . $this->getAdminLayouts();
-    }
-
     public function getLabelData(string $actionName): string
     {
         if (array_key_exists($actionName, self::LABELS_DATA)) {
@@ -156,10 +145,5 @@ class BookView extends AbstractBookView
         }
 
         return self::LABELS_DATA[$actionName][$this->param];
-    }
-
-    protected function getAdminLayouts(): string
-    {
-        return self::ADMIN_LAYOUTS;
     }
 }

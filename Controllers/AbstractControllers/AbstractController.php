@@ -22,7 +22,7 @@ abstract class AbstractController extends AbstractBaseController
      * @param string $logMsg
      * @param string|null $controller
      * @param string|null $action
-     * @param string|null $params
+     * @param array|null $params
      * @throws \Exception
      */
     protected function processWrongRequest(
@@ -30,7 +30,7 @@ abstract class AbstractController extends AbstractBaseController
         string $logMsg,
         string $controller = null,
         string $action = null,
-        string $params = null
+        array $params = null
     ): void {
         $this->getLogger()->log($logFileType, $logMsg);
         $this->getMsgModel()->setErrorMsg();
@@ -164,4 +164,11 @@ abstract class AbstractController extends AbstractBaseController
 
         return $this->dataValidator;
     }
+
+    protected function redirectHomeByUserType(): void
+    {
+        $this->sessionModel->isAdmin() ? $this->redirect('admin/') : $this->redirect();
+    }
+
+    abstract protected function redirectHome(): void;
 }

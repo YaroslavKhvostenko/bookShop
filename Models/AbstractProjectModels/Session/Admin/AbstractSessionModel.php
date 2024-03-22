@@ -27,4 +27,9 @@ abstract class AbstractSessionModel extends BaseSessionModel
 
         return false;
     }
+
+    protected function setUserType(): void
+    {
+        $this->userType = $this->isHeadAdmin() ? 'head_admin' : 'admin';
+    }
 }

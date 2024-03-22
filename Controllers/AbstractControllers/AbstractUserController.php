@@ -10,7 +10,7 @@ use Models\ProjectModels\Validation\ImageValidator;
 use Models\AbstractProjectModels\AbstractUserModel;
 use Views\AbstractViews\AbstractDefaultView;
 use Models\AbstractProjectModels\Session\User\AbstractSessionModel;
-//use mysql_xdevapi\Exception;
+
 
 abstract class AbstractUserController extends AbstractController
 {
@@ -42,7 +42,7 @@ abstract class AbstractUserController extends AbstractController
     public function registrationAction(array $params = null): void
     {
         if ($this->sessionModel->isLoggedIn()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -73,7 +73,7 @@ abstract class AbstractUserController extends AbstractController
     public function authorizationAction(array $params = null): void
     {
         if ($this->sessionModel->isLoggedIn()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -104,7 +104,7 @@ abstract class AbstractUserController extends AbstractController
     public function createAction(array $params = null): void
     {
         if ($this->sessionModel->isLoggedIn()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -176,7 +176,7 @@ abstract class AbstractUserController extends AbstractController
     public function loginAction(array $params = null): void
     {
         if ($this->sessionModel->isLoggedIn()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -248,16 +248,7 @@ abstract class AbstractUserController extends AbstractController
     public function logoutAction(): void
     {
         if ($this->sessionModel->isLoggedIn()) {
-            $this->logoutByCustomerType();
-        } else {
-            $this->redirectHome();
-        }
-    }
-
-    protected function redirectHomeByCustomerType(): void
-    {
-        if ($this->sessionModel->isAdmin()) {
-            $this->redirect('admin/');
+            $this->logoutByUserType();
         } else {
             $this->redirect();
         }
@@ -293,7 +284,7 @@ abstract class AbstractUserController extends AbstractController
     public function profileAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -330,7 +321,7 @@ abstract class AbstractUserController extends AbstractController
     public function changeAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -371,7 +362,7 @@ abstract class AbstractUserController extends AbstractController
     public function updateAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -513,7 +504,7 @@ abstract class AbstractUserController extends AbstractController
     public function addAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -553,7 +544,7 @@ abstract class AbstractUserController extends AbstractController
     public function newAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -598,7 +589,7 @@ abstract class AbstractUserController extends AbstractController
     public function deleteAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -647,7 +638,7 @@ abstract class AbstractUserController extends AbstractController
     public function removeAction(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
@@ -683,9 +674,22 @@ abstract class AbstractUserController extends AbstractController
         }
     }
 
-    abstract protected function validateRequester(): bool;
+    protected function logoutByUserType(): void
+    {
+        if ($this->validateRequester()) {
+            $this->logoutRedirect();
+        } else {
+            $this->userModel->logout();
+            $this->redirectHome();
+        }
+    }
 
     abstract protected function redirectHome(): void;
 
-    abstract protected function logoutByCustomerType(): void;
+    abstract protected function logoutRedirect(): void;
+
+    protected function prepareRedirect(string $url = null): void
+    {
+        $this->redirect($url);
+    }
 }

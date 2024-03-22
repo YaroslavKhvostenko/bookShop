@@ -9,15 +9,11 @@ use Models\ProjectModels\Session\HeadAdmin\SessionModel;
 
 class AdminModel extends AbstractAdminModel
 {
-    private const ADMINISTRATE = 'administrate';
-    private const REMOVE = 'remove';
-    private const PROVIDE = 'provide';
-    private const REDIRECT = 'redirect';
     private const CONDITION_DATA = [
-        self::ADMINISTRATE => self::ADMINISTRATE_CONDITION,
-        self::PROVIDE => self::PROVIDE_CONDITION,
-        self::REMOVE => self::REMOVE_CONDITION,
-        self::REDIRECT => self::REDIRECT_CONDITION
+        'administrate' => self::ADMINISTRATE_CONDITION,
+        'provide' => self::PROVIDE_CONDITION,
+        'remove' => self::REMOVE_CONDITION,
+        'redirect' => self::REDIRECT_CONDITION
     ];
     private const ADMINISTRATE_CONDITION = [
         'is_active' => '1',
@@ -34,10 +30,10 @@ class AdminModel extends AbstractAdminModel
         'is_head' => '0'
     ];
     private const DB_FIELDS = [
-        self::ADMINISTRATE => self::ADMINISTRATE_FIELDS,
-        self::PROVIDE => self::PROVIDE_FIELDS,
-        self::REMOVE => self::REMOVE_FIELDS,
-        self::REDIRECT => self::REDIRECT_FIELDS
+        'administrate' => self::ADMINISTRATE_FIELDS,
+        'provide' => self::PROVIDE_FIELDS,
+        'remove' => self::REMOVE_FIELDS,
+        'redirect' => self::REDIRECT_FIELDS
     ];
     private const ADMINISTRATE_FIELDS = [
         'name',
@@ -65,6 +61,8 @@ class AdminModel extends AbstractAdminModel
     public function __construct()
     {
         parent::__construct(SessionModel::getInstance());
+        $this->conditionData = self::CONDITION_DATA;
+        $this->dbFields = array_merge($this->dbFields, self::DB_FIELDS);
     }
 
     /**
@@ -84,6 +82,7 @@ class AdminModel extends AbstractAdminModel
         $dbResult = $this->db->select($this->getDbFields($actionName))->from(['admins'])
             ->condition(
                 $this->getConditionData($actionName),
+                null,
                 $andOr
             )->query()->fetchAll();
         if (!$dbResult) {
@@ -93,19 +92,6 @@ class AdminModel extends AbstractAdminModel
         }
 
         return $dbResult;
-    }
-
-    /**
-     * @param string $actionName
-     * @return string[]
-     */
-    protected function getConditionData(string $actionName): array
-    {
-        if (!array_key_exists($actionName, self::CONDITION_DATA)) {
-            throw new \InvalidArgumentException('You forgot to add field with value in const CONDITION_DATA!');
-        }
-
-        return self::CONDITION_DATA[$actionName];
     }
 
     /**
@@ -205,6 +191,66 @@ class AdminModel extends AbstractAdminModel
                 if (is_array($value) && count($value) === 1) {
                     $result[$field] = $value[0];
                 }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array|null
+     * @throws \Exception
+     */
+    public function getTasks(): ?array
+    {
+        $this->setDbMsgModel();
+        $select = [
+            'tasks`.`task_id' => 'task_id',
+            'tasks`.`admin_id' => 'admin_id',
+            'admins`.`name' => 'admin_name',
+            'admins`.`login' => 'admin_login',
+            'tasks`.`task_description' => 'task_description',
+            'tasks`.`task_status' => 'task_status'
+        ];
+        $requestTable = ['tasks'];
+        $joinTables = ['admins'];
+        $joinConditions = [
+            'tasks`.`admin_id' => 'admins`.`id'
+        ];
+        $joinTypes = ['JOIN'];
+        $tasksResult = $this->db->select($select)->from(
+            $requestTable,
+            $joinTables,
+            $joinConditions,
+            $joinTypes
+        )->orderBy('task_id')->
+        query()->
+        fetchAll();
+        if (!$tasksResult) {
+            $this->msgModel->setMessage('empty', 'empty_tasks', 'empty_tasks');
+            $result = null;
+        } else {
+            $result['tasks'] = $tasksResult;
+            $requestFields = [
+                'id',
+                'name'
+            ];
+            $requestTable = ['admins'];
+            $conditionData = [
+                'is_approved' => 1,
+                'is_head' => 0
+            ];
+            $andOR = ['AND'];
+            $adminsResult = $this->db->select($requestFields)->from($requestTable)->condition(
+                $conditionData,
+                null,
+                $andOR
+            )->query()->fetchAll();
+            if (!$adminsResult) {
+                $this->msgModel->setMessage('empty', 'empty_admins', 'empty_admins');
+                $result = null;
+            } else {
+                $result['admins'] = $adminsResult;
             }
         }
 

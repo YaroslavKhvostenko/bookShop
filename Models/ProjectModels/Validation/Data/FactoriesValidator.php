@@ -13,7 +13,6 @@ class FactoriesValidator extends AbstractFactory
         $controller = strtolower($controller);
         $className = 'FactoryValidator';
         $nameSpace = 'Models\ProjectModels\Validation\Data\\';
-
         switch ($controller) {
             case 'admin_controller' :
                 $nameSpace .= 'Admin';
@@ -26,6 +25,18 @@ class FactoriesValidator extends AbstractFactory
                 break;
             case 'user_controller' :
                 $nameSpace .= 'User';
+                break;
+            case 'task_controller' :
+                $nameSpace .= 'Task';
+                break;
+            case 'filter_controller' :
+                $nameSpace .= 'Filter';
+                break;
+            case 'basket_controller' :
+                $nameSpace .= 'Basket';
+                break;
+            case 'order_controller' :
+                $nameSpace .= 'Order';
                 break;
             default :
                 break;

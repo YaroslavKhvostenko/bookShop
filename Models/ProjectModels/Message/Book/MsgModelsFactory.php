@@ -20,13 +20,15 @@ class MsgModelsFactory extends AbstractMsgModelsFactory
         $customerType = strtolower($customerType);
         $className = 'MsgModel';
         $nameSpace = self::NAME_SPACE . 'Book' . self::isDefault($customerType);
-
         switch ($customerType) {
             case 'admin' :
                 $nameSpace .= 'Admin\\';
                 break;
             case 'user' :
                 $nameSpace .= 'User\\';
+                break;
+            case 'guest' :
+                $nameSpace .= 'Guest\\';
                 break;
             case 'default' :
                 $className = 'DefaultMsgModel';
@@ -40,6 +42,12 @@ class MsgModelsFactory extends AbstractMsgModelsFactory
             switch ($actionType) {
                 case 'add':
                     $nameSpace .= 'Add';
+                    break;
+                case 'show':
+                    $nameSpace .= 'Show';
+                    break;
+                case 'update':
+                    $nameSpace .= 'Update';
                     break;
                 default:
                     break;

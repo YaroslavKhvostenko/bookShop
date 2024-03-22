@@ -31,9 +31,4 @@ class SessionModel extends AbstractSessionModel
 
         return false;
     }
-
-    protected function setUserType(): void
-    {
-        $this->userType = 'admin';
-    }
 }

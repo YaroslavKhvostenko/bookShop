@@ -19,7 +19,7 @@ class IndexController extends AbstractIndexController
         $this->redirect();
     }
 
-    protected function validateRequest(): bool
+    protected function validateRequester(): bool
     {
         return $this->sessionModel->isLoggedIn() && !$this->sessionModel->isAdmin();
     }

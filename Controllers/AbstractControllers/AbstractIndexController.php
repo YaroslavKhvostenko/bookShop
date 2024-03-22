@@ -29,8 +29,10 @@ abstract class AbstractIndexController extends AbstractBaseController
     public function indexAction(): void
     {
         try {
-            if ($this->validateRequest()) {
+            if ($this->validateRequester()) {
                 $this->prepareRedirect();
+
+                return;
             } else {
                 $phtml = '.phtml';
                 $content = 'main';
@@ -47,6 +49,4 @@ abstract class AbstractIndexController extends AbstractBaseController
             $this->catchException($exception);
         }
     }
-
-    abstract protected function validateRequest(): bool;
 }

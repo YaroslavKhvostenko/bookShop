@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers\ProjectControllers\Head;
 
-use Controllers\AbstractControllers\AbstractAdminController;
+use Controllers\AbstractControllers\Admin\AbstractAdminController;
 use http\Exception\InvalidArgumentException;
 use Models\ProjectModels\HeadAdmin\AdminModel;
 use Views\ProjectViews\HeadAdmin\AdminView;
@@ -92,12 +92,12 @@ class AdminController extends AbstractAdminController
     protected function changePermission(array $params = null): void
     {
         if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-            $this->redirectHomeByCustomerType();
+            $this->redirectHomeByUserType();
 
             return;
         }
 
-        $this->getMsgModel(self::REQUEST);
+        $this->getMsgModel('request');
         if (!is_null($params)) {
             $this->processWrongRequest(
                 'default',
@@ -128,34 +128,40 @@ class AdminController extends AbstractAdminController
     {
         try {
             if (!$this->sessionModel->isLoggedIn() || $this->validateRequester()) {
-                $this->redirectHomeByCustomerType();
+                $this->redirectHomeByUserType();
 
                 return;
             }
 
             if (!$this->getPostInfo()->isPost()) {
                 $this->redirectHome();
+
+                return;
             }
 
-            $this->getMsgModel(self::REFERER);
+            $this->getMsgModel('referer');
             if (!is_null($params)) {
                 $this->processWrongRequest(
                     'default',
-                    'Params have to be null in ' . $this->serverInfo->getRequestAction() . 'Action!',
-                    $this->serverInfo->getRequestController(),
+                    'Params have to be null in accessAction!',
+                    'admin',
                     'administrate'
                 );
             } else {
-                $result = $this->getDataValidator(self::REFERER)->emptyCheckBox($this->postInfo->getData());
+                $result = $this->getDataValidator('referer')->emptyCheckBox($this->postInfo->getData());
                 if (in_array(false, $result)) {
-                    $this->checkResult($result, self::EMPTY, $this->serverInfo->getRefererAction());
+                    $this->checkResult(
+                        $result,
+                        'empty',
+                        false ,
+                        'admin',
+                        $this->serverInfo->getRefererAction()
+                    );
                 } else {
                     $result = $this->dataValidator->correctCheckBox($result, $this->serverInfo->getRefererAction());
                     $this->adminModel->setMessageModel($this->msgModel);
                     $this->adminModel->changeAccess($result, $this->dataValidator->getFieldName());
-                    $this->prepareRedirect(
-                        $this->createRedirectString($this->serverInfo->getRefererController(), 'administrate')
-                    );
+                    $this->prepareRedirect($this->createRedirectString('admin', 'administrate'));
                 }
             }
         } catch (\Exception $exception) {
@@ -163,40 +169,14 @@ class AdminController extends AbstractAdminController
         }
     }
 
-    /**
-     * @param array $result
-     * @param string $messagesType
-     * @param $actionType
-     * @throws \Exception
-     */
-    protected function checkResult(array $result, string $messagesType, $actionType): void
-    {
-        foreach ($result as $field => $value) {
-            if (!$value) {
-                $this->msgModel->setMessage($messagesType, $field, $field);
-            }
-        }
-
-        $this->prepareRedirect($this->createRedirectString($this->serverInfo->getRefererController(), $actionType));
-    }
-
     protected function prepareRedirect(string $url = null): void
     {
         parent::prepareRedirect('head/'. $url);
     }
 
-    protected function redirectHomeByCustomerType(): void
-    {
-        if ($this->sessionModel->isAdmin()) {
-            parent::prepareRedirect();
-        } else {
-            $this->redirect();
-        }
-    }
-
     protected function validateRequester(): bool
     {
-        return !$this->sessionModel->isAdmin() || !$this->sessionModel->isHeadAdmin();
+        return (!$this->sessionModel->isAdmin() || !$this->sessionModel->isHeadAdmin());
     }
 
     private function getPageTitle(string $actionName): string
@@ -219,10 +199,5 @@ class AdminController extends AbstractAdminController
         }
 
         return self::PAGES[$actionName];
-    }
-
-    protected function redirectHome(): void
-    {
-        parent::prepareRedirect();
     }
 }

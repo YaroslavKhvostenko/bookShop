@@ -9,30 +9,15 @@ use Models\ProjectModels\Session\Admin\SessionModel;
 abstract class AbstractUserView extends BaseUserView
 {
     private const AVATAR_ADDRESS = 'admin_users/';
-    protected const ADMIN_LAYOUTS = 'admin/';
 
     public function __construct()
     {
         parent::__construct(SessionModel::getInstance());
     }
 
-    protected function getHeaderPath(): string
-    {
-        if ($this->userSessModel->isHeadAdmin()) {
-            return 'head_admin/';
-        }
-
-        return 'admin/';
-    }
-
     protected function getContentPath(): string
     {
-        return parent::getContentPath() . $this->getAdminLayouts();
-    }
-
-    protected function getAdminLayouts(): string
-    {
-        return self::ADMIN_LAYOUTS;
+        return $this->getPath() . 'admin/';
     }
 
     protected function getAvatarAddress(string $avatarTitle): string

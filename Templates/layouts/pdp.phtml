@@ -1,1 +1,76 @@
 <?php
+/**
+ * @var $options array
+ * @var $this Views\ProjectViews\BookView
+ */
+?>
+<?php if (!is_null($options['data'])): ?>
+    <br>
+    <img src="/Media/images/books_logos/<?= $options['data']['book_image'] ?>" alt="avatar" width="100px" height="100px">
+    <br>
+    Название : <?= $options['data']['book_title'] ?>
+    <br>
+    Оценка : <?= !is_null($options['data']['book_rating']) ? $options['data']['book_rating'] : 'Оценок еще нет!' ?>
+    <br>
+    Автор : <?= $options['data']['book_author'] ?>
+    <br>
+    Жанр : <?= $options['data']['book_genre'] ?>
+    <br>
+    Дата публикации : <?= $options['data']['book_pub_date'] ?>
+    <br>
+    Стоимость : <?= $options['data']['book_price'] ?> грн.
+    <br>
+    Описание : <?= $options['data']['book_description'] ?>
+    <br>
+    <br>
+    <?php if (!is_null($options['user']) && isset($options['data']['logged_user_set_book_rating'])): ?>
+        Ваша оценка : <?= $options['data']['logged_user_set_book_rating'] ?>
+        <br>
+        <form action="/book/update/rating/<?= $options['data']['book_id'] ?>" method="post">
+            <label>Напишите новую оценку (от 1 до 5 целым числом) :</label>
+            <br>
+            <input name="rating" type="text" />
+            <button type="submit">Изменить оценку</button>
+        </form>
+    <?php else : ?>
+        <form action="/book/add/rating/<?= $options['data']['book_id']?>" method="post">
+            <label>Напишите оценку (от 1 до 5 целым числом) :</label>
+            <br>
+            <input name="rating" type="text" />
+            <button type="submit">Поставить оценку</button>
+        </form>
+    <?php endif; ?>
+    <br>
+    <br>
+    Оставте комментарий :
+    <form action="/book/add/comment/<?= $options['data']['book_id']?>" method="post">
+        <label>Ваш псевдоним (только латинские буквы или только кириллица, от 2 до 16 символов):</label>
+        <br>
+        <input name="author_name" type="text"
+            <?= isset($options['user']['name']) ? 'value=' . $options['user']['name'] : null ?> />
+        <br>
+        <label>Комментарий (от 2 до 300 символов, без использования нецензурной лексики):</label>
+        <br>
+        <input name="comment" type="text" />
+        <button type="submit"> Оставить комментарий</button>
+    </form>
+    <br>
+    <br>
+    <?php if (isset($options['data']['book_comments']) && !is_null($options['data']['book_comments'])): ?>
+        <ol>
+        <?php foreach ($options['data']['book_comments'] as $comment): ?>
+            <li>
+                <?= $comment['date'] . ' ' . '<br>' . $comment['author_name'] . ' написал :'?>
+                <br>
+                <?= $comment['comment']?>
+                <br>
+                <?php if (isset($options['user']['id']) && $options['user']['id'] === $comment['user_id']): ?>
+                    <form action="/book/remove/comment/<?= $comment['id']?>" method="post">
+                        <button type="submit">Удалить комментарий</button>
+                    </form>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+        </ol>
+    <?php endif; ?>
+<?php endif; ?>

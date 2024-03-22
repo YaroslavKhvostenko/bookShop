@@ -158,8 +158,8 @@ class Validator extends AbstractValidator
         if($dbResult) {
             $result = [];
             foreach ($dbResult as $item) {
-                foreach ($item as $data) {
-                    $result[] = $data;
+                foreach ($item as $id) {
+                    $result[] = $id;
                 }
             }
             if (in_array($data, $result)) {

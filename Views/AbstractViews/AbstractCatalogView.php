@@ -5,9 +5,11 @@ namespace Views\AbstractViews;
 
 use http\Exception\InvalidArgumentException;
 use Models\AbstractProjectModels\Session\User\AbstractSessionModel as UserSessionModel;
+use Models\AbstractProjectModels\AbstractFilterModel;
 
 abstract class AbstractCatalogView extends AbstractDefaultView
 {
+    protected AbstractFilterModel $filterModel;
     protected const PUB_MONTHS = [
         'Января',
         'Февраля',
@@ -23,9 +25,10 @@ abstract class AbstractCatalogView extends AbstractDefaultView
         'Декабря'
     ];
 
-    public function __construct(UserSessionModel $userSessModel)
+    public function __construct(UserSessionModel $userSessModel, AbstractFilterModel $filterModel)
     {
         parent::__construct($userSessModel);
+        $this->filterModel = $filterModel;
     }
 
     protected function getPubDate(string $pubDate): ?string
@@ -42,5 +45,10 @@ abstract class AbstractCatalogView extends AbstractDefaultView
         $year = $pubDate[2];
 
         return $day . ' ' . $month . ' ' . $year . ' года';
+    }
+
+    public function issetFilter(string $actionName): bool
+    {
+        return $this->filterModel->issetFilter('catalog', $actionName);
     }
 }

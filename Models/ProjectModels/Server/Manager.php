@@ -28,7 +28,8 @@ class Manager implements IDataManagement
     ];
     private const REQUEST_OPTIONS = [
         'controller',
-        'action'
+        'action',
+        'params'
     ];
     private const REFERER_OPTIONS = self::REQUEST_OPTIONS;
 
@@ -110,8 +111,9 @@ class Manager implements IDataManagement
             array_shift($result);
         }
 
-        $options['controller'] = $result[0];
-        $options['action'] = $result[1] ?? null;
+        $options['controller'] = array_shift($result);
+        $options['action'] = isset($result[0]) ? array_shift($result) : null;
+        $options['params'] = $result;
         $this->serverOptions[$uriType] = $this->lowerCase($options);
     }
 
@@ -131,6 +133,15 @@ class Manager implements IDataManagement
     public function getRequestAction(): string
     {
         return $this->getRequestOption('action');
+    }
+
+    public function getRequestParams(): array
+    {
+        if (empty($this->serverOptions['request'])) {
+            $this->initializeData('request');
+        }
+
+        return $this->serverOptions['request']['params'];
     }
 
     /**
@@ -171,6 +182,15 @@ class Manager implements IDataManagement
         return $this->getOption('referer', $option);
     }
 
+    public function getRefererParams(): array
+    {
+        if (empty($this->serverOptions['referer'])) {
+            $this->initializeData('referer');
+        }
+
+        return $this->serverOptions['referer']['params'];
+    }
+
     /**
      * @param string $uriString
      * @return array
@@ -180,7 +200,13 @@ class Manager implements IDataManagement
         $splits = explode('/', trim($uriString, '/'));
         $result = [];
         foreach ($splits as $uriParam) {
-            $result[] = trim($uriParam);
+            if (!empty($uriParam)) {
+                preg_match('/[a-z0-9]{1,16}/u', $uriParam, $matches);
+                $result[] = $matches[0];
+            } else {
+                $result[] = trim($uriParam);
+            }
+
         }
 
         return $result;
@@ -189,7 +215,13 @@ class Manager implements IDataManagement
     private function lowerCase(array $data): array
     {
         foreach ($data as $field => $value) {
-            $data[$field] = !is_null($value) ? strtolower($value) : $value;
+            if (!is_array($value)) {
+                $data[$field] = !is_null($value) ? strtolower($value) : $value;
+            } else {
+                foreach ($value as $indexKey => $paramData) {
+                    $data[$field][$indexKey] = is_numeric($paramData) ? (int)$paramData : strtolower($paramData);
+                }
+            }
         }
 
         return $data;

@@ -5,14 +5,13 @@ namespace Views\ProjectViews\HeadAdmin;
 
 use Views\AbstractViews\Admin\AbstractCatalogView;
 use Models\ProjectModels\Session\HeadAdmin\SessionModel;
+use Models\ProjectModels\HeadAdmin\FilterModel;
 
 class CatalogView extends AbstractCatalogView
 {
-    protected const ADMIN_LAYOUTS = 'head_admin/';
-
     public function __construct()
     {
-        parent::__construct(SessionModel::getInstance());
+        parent::__construct(SessionModel::getInstance(), new FilterModel());
     }
 
     public function getPubDate(string $pubDate): ?string

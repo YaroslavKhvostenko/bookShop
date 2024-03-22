@@ -16,17 +16,18 @@ class CatalogController extends AbstractCatalogController
         parent::__construct(new CatalogModel(), new CatalogView(), SessionModel::getInstance());
     }
 
-    protected function validateRequest(): bool
+    protected function validateRequester(): bool
     {
         return $this->sessionModel->isAdmin();
     }
 
     protected function prepareRedirect(string $url = null): void
     {
-        if ($this->sessionModel->isAdmin()) {
-            $this->redirect('admin/');
-        } else {
-            $this->redirect();
-        }
+        $this->redirect($url);
+    }
+
+    protected function redirectHome(): void
+    {
+        $this->redirect();
     }
 }
